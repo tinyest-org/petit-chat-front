@@ -7,8 +7,9 @@
     "start": "vite"
   },
   "dependencies": {
-    "@suid/material": "^0.9.1",
+    "@absolid/solid-keycloak": "^0.1.1",
     "@suid/icons-material": "^0.5.5",
+    "@suid/material": "^0.9.1",
     "solid-js": "^1.6.7"
   },
   "devDependencies": {
