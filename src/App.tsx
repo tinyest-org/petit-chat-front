@@ -1,6 +1,9 @@
 import Button from "@suid/material/Button";
+import OneConv from "./components/page/OneConv/OneConv";
 
 
 export default function App() {
-  return <Button variant="contained">Hello world</Button>;
+  return (
+    <OneConv />
+  );
 }

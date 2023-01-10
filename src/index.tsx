@@ -2,20 +2,9 @@
 import { render } from "solid-js/web";
 import App from "./App";
 
-import type {
-    KeycloakConfig,
-    KeycloakInitOptions,
-} from '@absolid/solid-keycloak'
 import { KeycloakProvider } from '@absolid/solid-keycloak'
+import { KEYCLOAK_CONFIG, KEYCLOAK_INIT_OPTIONS } from "./keycloak";
 
-const KEYCLOAK_CONFIG: KeycloakConfig = {
-    realm: 'concord',
-    url: 'https://identity.tinyest.org',
-    clientId: 'concord-front'
-}
-const KEYCLOAK_INIT_OPTIONS: KeycloakInitOptions = {
-    onLoad: 'login-required'
-}
 
 const Index = () => {
 
