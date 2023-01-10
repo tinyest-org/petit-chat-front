@@ -44,8 +44,8 @@ export class QueryBodyPrepartor implements QueryDataPreparator {
     }
 
     if (formatOption === "multipart") {
-      headers.append("Content-Type", "multipart/form-data");
-      headers.append("Accept", "text/plain, application/json");
+      // headers.append("Content-Type", "multipart/form-data");
+      // headers.append("Accept", "text/plain, application/json");
     }
   }
   async serialyze(data: any, formatOption: FormatOption): Promise<string | FormData | undefined> {
