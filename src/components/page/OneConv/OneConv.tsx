@@ -10,7 +10,8 @@ import { RawSignal } from "../../../store/signal/type";
 const chatId = '43c0db5c-d829-4929-8efc-5e4a13bb202f';
 
 async function fetchMessages(id: string) {
-    return getChat(id);
+    const res =  await getChat(id);
+    return res.reverse();
 }
 
 export default function OneConv() {
