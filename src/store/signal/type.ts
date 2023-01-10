@@ -1,6 +1,9 @@
+import { ID } from "../common/type"
 
 
 
-export type Signal = {
-    
+export type RawSignal = {
+    createdAt: ID;
+    content: string;
+    type: number;
 }

@@ -1,4 +1,4 @@
-import { ListItem } from "@suid/material";
+import { ListItem, ListItemText } from "@suid/material";
 import { Chat } from "../../../store/chat/type";
 
 
@@ -7,11 +7,12 @@ type Props = {
 }
 
 export default function OneConv(props: Props) {
-    const {} = props;
 
-    return (
+    return ( // todo: add link
         <ListItem>
-
+            <ListItemText>
+                {props.chat.name}
+            </ListItemText>
         </ListItem>
     )
 }
