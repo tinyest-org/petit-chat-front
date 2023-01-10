@@ -1,6 +1,7 @@
-import { Button, TextField } from "@suid/material";
 import { createSignal } from "solid-js";
 import { ID } from "../../../store/common/type";
+import Button from "../../common/Button/Button";
+import TextField from "../../common/Form/TextField";
 
 
 type Props = {
