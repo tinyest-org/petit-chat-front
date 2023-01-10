@@ -15,7 +15,11 @@ export default function Layout(props: Props) {
             }}
         >
             <ConvBar />
-            <div>
+            <div
+            style={{
+                width: '100%'
+            }}
+            >
                 {c()}
             </div>
         </div>

@@ -11,7 +11,7 @@ type Props = {
 export default function LoadingComponent(props: Props) {
     const c = children(() => props.children);
     return (
-        <Show when={() => props.loading} fallback={<CircularProgress />}>
+        <Show when={!props.loading} fallback={<CircularProgress />}>
             {c()}
         </Show>
     );

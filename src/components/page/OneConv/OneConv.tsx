@@ -1,4 +1,4 @@
-import { Button } from "@suid/material";
+import { Button, Typography } from "@suid/material";
 import { useParams } from "@solidjs/router"
 import { createResource, createSignal, For, onMount } from "solid-js";
 import { Chat, getChat } from "../../../store/chat/type";
@@ -9,7 +9,7 @@ import OneMessage from "./messageItem";
 const chatId = '43c0db5c-d829-4929-8efc-5e4a13bb202f';
 
 async function fetchMessages(id: string) {
-    return getChat(chatId);
+    return getChat(id);
 }
 
 export default function OneConv() {
@@ -20,11 +20,15 @@ export default function OneConv() {
     const [data, { refetch, mutate }] = createResource(() => chatId, fetchMessages);
 
     return (
-        <>
-            <Button variant="contained">
-                Current route is {chatId}
-            </Button>
+        <div
+            style={{
+                width: '100%',
+            }}
+        >
             {/* display paged messages */}
+            <Typography>
+                {chatId}
+            </Typography>
             <LoadingComponent loading={data.loading}>
                 {isEnd() && "Vous êtes arrivé au bout du fil"}
                 <For each={data()}>
@@ -32,6 +36,6 @@ export default function OneConv() {
                 </For>
             </LoadingComponent>
             <NewMessage chatId={chatId} />
-        </>
+        </div>
     );
 }

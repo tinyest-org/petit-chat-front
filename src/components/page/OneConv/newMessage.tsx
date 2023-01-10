@@ -14,7 +14,12 @@ export default function NewSignal(props: Props) {
     const [textContent, setText] = createSignal('');
 
     return (
-        <>
+        <div
+        style={{
+            display: 'flex',
+            "flex-direction": 'column',
+        }}
+        >
             <TextField
                 // TODO: multiline
                 value={textContent()}
@@ -23,6 +28,6 @@ export default function NewSignal(props: Props) {
             <Button>
                 Send
             </Button>
-        </>
+        </div>
     );
 }

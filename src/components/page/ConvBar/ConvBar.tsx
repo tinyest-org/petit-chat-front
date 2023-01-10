@@ -3,6 +3,7 @@ import { createResource, createSignal, For, onCleanup, onMount } from "solid-js"
 import { get } from "../../../api/api";
 import { Chat } from "../../../store/chat/type";
 import LoadingComponent from "../../common/LoadingComponent/LoadingComponent";
+import SearchBar from "../../common/SearchBar/SearchBar";
 import OneConv from "./oneConv";
 
 
@@ -22,17 +23,20 @@ export default function ConvBar() {
     });
 
     return (
-        <>
+        <div style={{
+            display: 'flex',
+            "flex-direction": "column",
+            width: '15em',
+        }}>
+            <SearchBar />
             <LoadingComponent loading={chats.loading}>
-                <List sx={{
-                    width: '20em',
-                }}>
+                <List>
                     <For each={chats()}>
                         {(chat) => <OneConv chat={chat} />}
                     </For>
                 </List>
             </LoadingComponent>
-        </>
+        </div>
         // TODO: detect scroll for pagination
     );
 }

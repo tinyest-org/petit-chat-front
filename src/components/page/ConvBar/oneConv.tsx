@@ -1,3 +1,4 @@
+import { A } from "@solidjs/router";
 import { ListItem, ListItemText } from "@suid/material";
 import { Chat } from "../../../store/chat/type";
 
@@ -9,10 +10,12 @@ type Props = {
 export default function OneConv(props: Props) {
 
     return ( // todo: add link
-        <ListItem>
-            <ListItemText>
-                {props.chat.name}
-            </ListItemText>
-        </ListItem>
+        <A href={`/chat/${props.chat.id}`}>
+            <ListItem>
+                <ListItemText>
+                    {props.chat.name}
+                </ListItemText>
+            </ListItem>
+        </A>
     )
 }
