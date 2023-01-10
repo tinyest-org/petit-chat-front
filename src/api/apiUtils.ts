@@ -12,10 +12,12 @@ type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 type FetchOptions = {
   cache: boolean;
+  formatOption: FormatOption,
 };
 
 const defaultFetchOptions: FetchOptions = {
   cache: false,
+  formatOption: 'json',
 };
 
 export class HTTPRequestError extends Error {
@@ -29,10 +31,10 @@ export class HTTPRequestError extends Error {
 
 export interface QueryDataPreparator {
   prepareHeaders(headers: Headers, formatOption: FormatOption): Promise<void>;
-  serialyze(data: any, formatOption: FormatOption): Promise<string | undefined>;
+  serialyze(data: any, formatOption: FormatOption): Promise<string | FormData | undefined>;
 }
 
-type FormatOption = "json" | "text" | "blob";
+type FormatOption = "json" | "text" | "blob" | "multipart";
 
 export class QueryBodyPrepartor implements QueryDataPreparator {
   async prepareHeaders(headers: Headers, formatOption: FormatOption): Promise<void> {
@@ -40,9 +42,28 @@ export class QueryBodyPrepartor implements QueryDataPreparator {
       headers.append("Content-Type", "application/json");
       headers.append("Accept", "text/plain, application/json");
     }
+
+    if (formatOption === "multipart") {
+      headers.append("Content-Type", "multipart/form-data");
+      headers.append("Accept", "text/plain, application/json");
+    }
   }
-  async serialyze(data: any, formatOption: FormatOption): Promise<string | undefined> {
-    return data ? JSON.stringify(data) : undefined;
+  async serialyze(data: any, formatOption: FormatOption): Promise<string | FormData | undefined> {
+    if (!data) {
+      return undefined;
+    }
+    if (formatOption === "json") {
+      return JSON.stringify(data);
+    } else {
+      const form = new FormData();
+      Object.keys(data).forEach(k => {
+        const v = data[k];
+        if (typeof v === "string") {
+          form.append(k, v);
+        }
+      });
+      return form;
+    }
   }
 }
 
@@ -76,21 +97,20 @@ export class API {
   ): Promise<T> => {
     const headers = new Headers();
     await this.securityProvider.prepareHeaders(headers);
-    
+
     if (options.cache) {
       const cached = await this.cache.getItem(path);
       if (cached) {
         headers.append("If-Modified-Since", cached.fetchedAt);
       }
     }
-    
-    const formatOption: FormatOption = json ? "json" : "text";
-    await this.queryPreparator.prepareHeaders(headers, formatOption); // TODO: handle more generic context
-    
+
+    await this.queryPreparator.prepareHeaders(headers, options.formatOption); // TODO: handle more generic context
+
     const res = await fetch(this.url + path, {
       method,
       headers,
-      body: await this.queryPreparator.serialyze(body, formatOption),
+      body: await this.queryPreparator.serialyze(body, options.formatOption),
     });
 
     if (res.status >= 400) {
@@ -125,8 +145,8 @@ export class API {
     return this.api<T>(path, "DELETE", undefined, empty); //TODO verify this
   };
 
-  post = <T>(path: string, body: any) => {
-    return this.api<T>(path, "POST", body);
+  post = <T>(path: string, body: any, json: boolean = true, option?: FetchOptions) => {
+    return this.api<T>(path, "POST", body, undefined, json, option);
   };
 
   put = <T>(path: string, body?: any) => {
