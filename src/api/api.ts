@@ -1,18 +1,18 @@
 import keycloak from "../keycloak";
 import { API, HTTPRequestError, QueryBodyPrepartor } from "./apiUtils";
 import SimpleCache, { LocalStoreObjectDataStore } from "./utils/cacheUtils";
-import { KeycloakSecurityProvider } from "./securityUtils";
+import { KeycloakSecurityProvider, NoopSecurityProvider } from "./securityUtils";
 
 export { HTTPRequestError };
 
 const cacheKey = "CACHE"
 
-const apiUrl = process.env.REACT_APP_API_URL || "/api";
+const apiUrl = 'http://localhost:8090'
 
 const bodyPreparator = new QueryBodyPrepartor();
 
 const cache = new SimpleCache(new LocalStoreObjectDataStore(cacheKey));
-const securityProvider = new KeycloakSecurityProvider(keycloak);
+const securityProvider = new NoopSecurityProvider();
 
 export const api = new API(apiUrl, securityProvider, cache, bodyPreparator);
 

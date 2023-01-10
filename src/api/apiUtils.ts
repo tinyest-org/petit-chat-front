@@ -76,16 +76,17 @@ export class API {
   ): Promise<T> => {
     const headers = new Headers();
     await this.securityProvider.prepareHeaders(headers);
-
+    
     if (options.cache) {
       const cached = await this.cache.getItem(path);
       if (cached) {
         headers.append("If-Modified-Since", cached.fetchedAt);
       }
     }
+    
     const formatOption: FormatOption = json ? "json" : "text";
     await this.queryPreparator.prepareHeaders(headers, formatOption); // TODO: handle more generic context
-
+    
     const res = await fetch(this.url + path, {
       method,
       headers,

@@ -1,6 +1,33 @@
 import { SecurityProvider } from "./apiUtils";
 import Keycloak from "keycloak-js";
 
+export class NoopSecurityProvider implements SecurityProvider {
+  constructor() { }
+
+  login(): void {
+
+  }
+
+  async refresh(): Promise<boolean> {
+    return true;
+  }
+
+  getToken(): string {
+    return "";
+  }
+
+  isExpired(): boolean {
+    return false;
+
+  }
+
+  async prepareHeaders(headers: Headers) {
+
+  }
+  async makeHeaderFields(): Promise<{ [key: string]: string }> {
+    return {};
+  }
+}
 export class KeycloakSecurityProvider implements SecurityProvider {
   constructor(private readonly keycloak: Keycloak) { }
 
@@ -17,7 +44,13 @@ export class KeycloakSecurityProvider implements SecurityProvider {
   }
 
   isExpired(): boolean {
-    return this.keycloak.isTokenExpired();
+    try {
+      return this.keycloak.isTokenExpired();
+    } catch {
+      this.login();
+      return true;
+    }
+
   }
 
   async prepareHeaders(headers: Headers) {
@@ -31,6 +64,7 @@ export class KeycloakSecurityProvider implements SecurityProvider {
     if (this.isExpired()) {
       await this.refresh();
     }
+
     return {
       "Authorization": `Bearer ${this.getToken()}`
     }
