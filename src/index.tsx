@@ -1,10 +1,9 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import App from "./App";
-
 import { KeycloakProvider } from '@absolid/solid-keycloak'
 import { KEYCLOAK_CONFIG, KEYCLOAK_INIT_OPTIONS } from "./keycloak";
 import { Router } from "@solidjs/router"
+import Routes from './components/common/Router/Router';
 
 const Index = () => {
 
@@ -14,7 +13,7 @@ const Index = () => {
                 config={KEYCLOAK_CONFIG}
                 initOptions={KEYCLOAK_INIT_OPTIONS}
             >
-                <App />
+                <Routes />
             </KeycloakProvider>
         </Router>
     )
