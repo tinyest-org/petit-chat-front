@@ -1,13 +1,13 @@
-import { TextField } from "@suid/material";
+import { TextField as MuiTextField } from "@suid/material";
 import { TextFieldProps } from "@suid/material/TextField";
 
 
 type Props = TextFieldProps;
 
 
-export default function MultilineTextField(props: Props) {
+export default function TextField(props: Props) {
 
     return (
-        <TextField {...props} />
+        <MuiTextField {...props} />
     )
 }
