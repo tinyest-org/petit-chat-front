@@ -34,38 +34,7 @@ export interface QueryDataPreparator {
   serialyze(data: any, formatOption: FormatOption): Promise<string | FormData | undefined>;
 }
 
-type FormatOption = "json" | "text" | "blob" | "multipart";
-
-export class QueryBodyPrepartor implements QueryDataPreparator {
-  async prepareHeaders(headers: Headers, formatOption: FormatOption): Promise<void> {
-    if (formatOption === "json") {
-      headers.append("Content-Type", "application/json");
-      headers.append("Accept", "text/plain, application/json");
-    }
-
-    if (formatOption === "multipart") {
-      // headers.append("Content-Type", "multipart/form-data");
-      // headers.append("Accept", "text/plain, application/json");
-    }
-  }
-  async serialyze(data: any, formatOption: FormatOption): Promise<string | FormData | undefined> {
-    if (!data) {
-      return undefined;
-    }
-    if (formatOption === "json") {
-      return JSON.stringify(data);
-    } else {
-      const form = new FormData();
-      Object.keys(data).forEach(k => {
-        const v = data[k];
-        if (typeof v === "string") {
-          form.append(k, v);
-        }
-      });
-      return form;
-    }
-  }
-}
+export type FormatOption = "json" | "text" | "blob" | "multipart";
 
 export interface SecurityProvider {
   makeHeaderFields(): Promise<{ [key: string]: string }>;
@@ -75,19 +44,20 @@ export interface SecurityProvider {
 }
 
 export class API {
-  public readonly url: string;
+  public readonly baseUrl: string;
+
   public readonly securityProvider: SecurityProvider;
   public readonly cache: Cache;
   public readonly queryPreparator: QueryDataPreparator;
 
-  constructor(url: string, securityProvider: SecurityProvider, cache: Cache, queryPreparator: QueryDataPreparator) {
-    this.url = url;
+  constructor(baseUrl: string, securityProvider: SecurityProvider, cache: Cache, queryPreparator: QueryDataPreparator) {
+    this.baseUrl = baseUrl;
     this.securityProvider = securityProvider;
     this.cache = cache;
     this.queryPreparator = queryPreparator;
   }
 
-  api = async <T>(
+  httpQuery = async <T>(
     path: string,
     method: Method,
     body?: any,
@@ -107,7 +77,7 @@ export class API {
 
     await this.queryPreparator.prepareHeaders(headers, options.formatOption); // TODO: handle more generic context
 
-    const res = await fetch(this.url + path, {
+    const res = await fetch(this.baseUrl + path, {
       method,
       headers,
       body: await this.queryPreparator.serialyze(body, options.formatOption),
@@ -138,23 +108,23 @@ export class API {
   };
 
   get = <T>(path: string, json: boolean = true, options?: FetchOptions) => {
-    return this.api<T>(path, "GET", undefined, false, json, options);
+    return this.httpQuery<T>(path, "GET", undefined, false, json, options);
   };
 
   del = <T = void>(path: string, empty = false) => {
-    return this.api<T>(path, "DELETE", undefined, empty); //TODO verify this
+    return this.httpQuery<T>(path, "DELETE", undefined, empty); //TODO verify this
   };
 
   post = <T>(path: string, body: any, json: boolean = true, option?: FetchOptions) => {
-    return this.api<T>(path, "POST", body, undefined, json, option);
+    return this.httpQuery<T>(path, "POST", body, undefined, json, option);
   };
 
   put = <T>(path: string, body?: any) => {
-    return this.api<T>(path, "PUT", body);
+    return this.httpQuery<T>(path, "PUT", body);
   };
 
   patch = <T>(path: string, body?: any) => {
-    return this.api<T>(path, "PATCH", body);
+    return this.httpQuery<T>(path, "PATCH", body);
   };
 }
 

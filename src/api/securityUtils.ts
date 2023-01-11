@@ -1,6 +1,9 @@
 import { SecurityProvider } from "./apiUtils";
 import Keycloak from "keycloak-js";
 
+/**
+ * Does nothing
+ */
 export class NoopSecurityProvider implements SecurityProvider {
   constructor() { }
 
@@ -28,6 +31,8 @@ export class NoopSecurityProvider implements SecurityProvider {
     return {};
   }
 }
+
+
 export class KeycloakSecurityProvider implements SecurityProvider {
   constructor(private readonly keycloak: Keycloak) { }
 
