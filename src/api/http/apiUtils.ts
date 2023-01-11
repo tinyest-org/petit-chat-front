@@ -43,7 +43,7 @@ export interface SecurityProvider {
   login(): void;
 }
 
-export class API {
+export class HttpAPI {
   public readonly baseUrl: string;
 
   public readonly securityProvider: SecurityProvider;

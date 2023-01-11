@@ -1,4 +1,4 @@
-import { get } from "../../api/api";
+
 import { ID } from "../common/type"
 import { RawSignal } from "../signal/type";
 
@@ -10,6 +10,3 @@ export type Chat = {
 }
 
 
-export const getChat = (chatId: ID) => {
-    return get<RawSignal[]>(`/chat/${chatId}`);
-}

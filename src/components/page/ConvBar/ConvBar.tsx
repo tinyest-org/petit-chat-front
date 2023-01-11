@@ -1,6 +1,6 @@
 import { List, Typography } from "@suid/material";
 import { createResource, createSignal, For, onCleanup, onMount } from "solid-js";
-import { get } from "../../../api/api";
+import { get } from "../../../api/httpApi";
 import { Chat } from "../../../store/chat/type";
 import LoadingComponent from "../../common/LoadingComponent/LoadingComponent";
 import SearchBar from "../../common/SearchBar/SearchBar";

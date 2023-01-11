@@ -1,11 +1,12 @@
 import { Button, Typography } from "@suid/material";
 import { useParams } from "@solidjs/router"
 import { createResource, createSignal, For, onMount } from "solid-js";
-import { Chat, getChat } from "../../../store/chat/type";
+import { Chat } from "../../../store/chat/type";
 import LoadingComponent from "../../common/LoadingComponent/LoadingComponent";
 import NewMessage from "./newMessage";
 import OneMessage from "./messageItem";
 import { RawSignal } from "../../../store/signal/type";
+import { getChat } from "../../../store/chat/action";
 
 const chatId = '43c0db5c-d829-4929-8efc-5e4a13bb202f';
 
