@@ -1,4 +1,4 @@
-import { httpApi } from "../../api/httpApi";
+import { httpApi } from "../../api/api";
 import { ID } from "../common/type";
 import { RawSignal } from "../signal/type";
 
