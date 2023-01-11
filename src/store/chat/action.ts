@@ -1,7 +1,9 @@
-import { httpApi } from "../../api/api";
+import { api } from "../../api/api";
 import { ID } from "../common/type";
 import { RawSignal } from "../signal/type";
 
-export const getChat = (chatId: ID) => {
-    return httpApi.get<RawSignal[]>(`/chat/${chatId}`);
+export const getSignals = (chatId: ID) => {
+    // TODO: check if has WS open, if so use ws 
+    // else use simple http
+    return api.http.get<RawSignal[]>(`/chat/${chatId}`);
 }

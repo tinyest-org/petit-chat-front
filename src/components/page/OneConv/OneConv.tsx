@@ -6,12 +6,12 @@ import LoadingComponent from "../../common/LoadingComponent/LoadingComponent";
 import NewMessage from "./newMessage";
 import OneMessage from "./messageItem";
 import { RawSignal } from "../../../store/signal/type";
-import { getChat } from "../../../store/chat/action";
+import { getSignals } from "../../../store/chat/action";
 
 const chatId = '43c0db5c-d829-4929-8efc-5e4a13bb202f';
 
 async function fetchMessages(id: string) {
-    const res =  await getChat(id);
+    const res =  await getSignals(id);
     return res.reverse();
 }
 
