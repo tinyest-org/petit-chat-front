@@ -3,7 +3,6 @@ import { ID } from "../common/type";
 import { RawSignal } from "./type"
 
 
-
 export const sendSignal = (chatId: ID, text: string, files: File[]) => {
     const body = {
         content: text
@@ -15,3 +14,7 @@ export const sendSignal = (chatId: ID, text: string, files: File[]) => {
     return api.http.post<RawSignal>(`/chat/${chatId}`, body, true, { cache: false, formatOption: "multipart" });
 }
 
+
+export const searchSignal = (chatId: ID, query: string) => {
+    return api.http.get<RawSignal[]>(`/chat/${chatId}/search?q=${encodeURIComponent(query)}`);
+}

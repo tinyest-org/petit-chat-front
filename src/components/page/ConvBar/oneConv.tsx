@@ -5,6 +5,8 @@ import { Chat } from "../../../store/chat/type";
 
 type Props = {
     chat: Chat;
+    lastMessage: string;
+    unread: boolean;
 }
 
 export default function OneConv(props: Props) {

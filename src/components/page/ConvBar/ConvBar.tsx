@@ -1,6 +1,6 @@
 import { List, Typography } from "@suid/material";
 import { createResource, createSignal, For, onCleanup, onMount } from "solid-js";
-import { get } from "../../../api/httpApi";
+import { api } from "../../../api/api";
 import { Chat } from "../../../store/chat/type";
 import LoadingComponent from "../../common/LoadingComponent/LoadingComponent";
 import SearchBar from "../../common/SearchBar/SearchBar";
@@ -12,15 +12,11 @@ export default function ConvBar() {
     const [page, setPage] = createSignal(0); // increment on scroll
     const userId = '';
 
-    const getChats = (userId: string) => {
-        return get<Chat[]>('/user/me/chats');
+    const getChats = (offset: number) => {
+        return api.http.get<Chat[]>('/user/me/chats');
     }
 
-    const [chats, { }] = createResource(() => userId, getChats);
-
-    onCleanup(() => {
-
-    });
+    const [chats, { }] = createResource(page, getChats);
 
     return (
         <div style={{
@@ -32,8 +28,9 @@ export default function ConvBar() {
             <LoadingComponent loading={chats.loading}>
                 <List>
                     <For each={chats()}>
-                        {(chat) => <OneConv chat={chat} />}
+                        {(chat) => <OneConv unread={false} lastMessage="" chat={chat} />}
                     </For>
+                    {/* detect end of item and ask for next items */}
                 </List>
             </LoadingComponent>
         </div>

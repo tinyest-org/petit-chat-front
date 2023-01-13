@@ -23,6 +23,7 @@ export default function OneConv() {
     const [data, { refetch, mutate }] = createResource(() => chatId, fetchMessages);
 
     const addSignal = (s: RawSignal) => {
+        // does not work correctly
         mutate(e => {
             return [...e, s];
         });

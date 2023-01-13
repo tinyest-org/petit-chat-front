@@ -2,7 +2,7 @@ import { HttpAPI } from './http/apiUtils';
 import { httpApi } from './httpApi';
 
 
-class API {
+export class API {
     private readonly httpAPI: HttpAPI;
 
     get http() {
