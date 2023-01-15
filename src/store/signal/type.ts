@@ -20,6 +20,11 @@ export enum SignalType {
 
 const mapping = {
     0: SignalType.TEXT,
+    1: SignalType.FILE,
+    2: SignalType.CALL,
+    3: SignalType.ARRIVAL,
+    4: SignalType.LEFT,
+    5: SignalType.IMAGE,
 }
 
 export function mapSignalType(type: number): SignalType {

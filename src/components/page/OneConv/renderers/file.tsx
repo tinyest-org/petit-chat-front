@@ -14,10 +14,10 @@ export default function FileSignal(props: SignalProps) {
     }
 
     return (
-        <>
+        <A href={url}>
             <IconButton onClick={download}>
                 <CloudCircleOutlined />
             </IconButton>
-        </>
+        </A>
     );
 }

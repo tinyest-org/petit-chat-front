@@ -11,7 +11,7 @@ export const sendSignal = (chatId: ID, text: string, files: File[]) => {
         body[f.name] = f;
     });
     // if has ws use ws else use http
-    return api.http.post<RawSignal>(`/chat/${chatId}`, body, true, { cache: false, formatOption: "multipart" });
+    return api.http.post<RawSignal[]>(`/chat/${chatId}`, body, true, { cache: false, formatOption: "multipart" });
 }
 
 

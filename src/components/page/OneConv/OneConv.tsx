@@ -11,8 +11,8 @@ import { getSignals } from "../../../store/chat/action";
 const chatId = '43c0db5c-d829-4929-8efc-5e4a13bb202f';
 
 async function fetchMessages(id: string) {
-    const res =  await getSignals(id);
-    return res.reverse();
+    const res = await getSignals(id);
+    return res.reverse().filter(e => e.content !== null);
 }
 
 export default function OneConv() {
@@ -22,29 +22,37 @@ export default function OneConv() {
     const chatId = params.id;
     const [data, { refetch, mutate }] = createResource(() => chatId, fetchMessages);
 
-    const addSignal = (s: RawSignal) => {
+    const addSignal = (s: RawSignal[]) => {
         // does not work correctly
         mutate(e => {
-            return [...e, s];
+            return [...e, ...s];
         });
     }
-
+    console.log(data.loading);
     return (
         <div
-            style={{
-                width: '100%',
-            }}
-        >
-            {/* display paged messages */}
-            <Typography>
-                {chatId}
-            </Typography>
-            <LoadingComponent loading={data.loading}>
-                {isEnd() && "Vous êtes arrivé au bout du fil"}
-                <For each={data()}>
-                    {e => <OneMessage signal={e} />}
-                </For>
-            </LoadingComponent>
+        style={{
+            height: '90vh',
+            width: '100%',
+        }}>
+            <div
+                style={{
+                    width: '100%',
+                    "overflow-y": 'scroll',
+                    height: '80vh',
+                }}
+            >
+                {/* display paged messages */}
+                <Typography>
+                    {chatId}
+                </Typography>
+                <LoadingComponent loading={data.loading}>
+                    {isEnd() && "Vous êtes arrivé au bout du fil"}
+                    <For each={data()}>
+                        {e => <OneMessage signal={e} />}
+                    </For>
+                </LoadingComponent>
+            </div>
             <NewMessage chatId={chatId} addSignal={addSignal} />
         </div>
     );

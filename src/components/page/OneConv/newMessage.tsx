@@ -8,7 +8,7 @@ import TextField from "../../common/Form/MultilineTextField";
 
 type Props = {
     chatId: ID;
-    addSignal: (s: RawSignal) => void;
+    addSignal: (s: RawSignal[]) => void;
 }
 
 
@@ -16,16 +16,19 @@ export default function NewSignal(props: Props) {
 
     const [textContent, setText] = createSignal('');
 
-    const newMessage =() => {
+    const newMessage = () => {
         sendSignal(props.chatId, textContent(), []).then(props.addSignal);
+        setText('');
     }
+
+    // TODO: catch enter press to send the message
 
     return (
         <div
-        style={{
-            display: 'flex',
-            "flex-direction": 'column',
-        }}
+            style={{
+                display: 'flex',
+                "flex-direction": 'column',
+            }}
         >
             <TextField
                 // TODO: multiline

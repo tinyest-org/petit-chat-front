@@ -1,5 +1,6 @@
-import { Typography } from "@suid/material";
+import { AppBar, Typography } from "@suid/material";
 import { children, JSX } from "solid-js";
+import SearchBar from "../common/SearchBar/SearchBar";
 import ConvBar from "../page/ConvBar/ConvBar";
 
 type Props = {
@@ -14,13 +15,23 @@ export default function Layout(props: Props) {
                 display: 'flex'
             }}
         >
-            <ConvBar />
+            <AppBar>
+                <SearchBar />
+            </AppBar>
             <div
-            style={{
-                width: '100%'
-            }}
+                style={{
+                    display: 'flex',
+                    "margin-top": "56px",
+                }}
             >
-                {c()}
+                <ConvBar />
+                <div
+                    style={{
+                        width: '100%'
+                    }}
+                >
+                    {c()}
+                </div>
             </div>
         </div>
     );

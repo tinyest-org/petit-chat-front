@@ -4,6 +4,8 @@ import { api } from "../../../api/api";
 import { Chat } from "../../../store/chat/type";
 import LoadingComponent from "../../common/LoadingComponent/LoadingComponent";
 import SearchBar from "../../common/SearchBar/SearchBar";
+import NewConv from "../NewConv/NewConv";
+import NewChat from "./newConvButton";
 import OneConv from "./oneConv";
 
 
@@ -24,7 +26,7 @@ export default function ConvBar() {
             "flex-direction": "column",
             width: '15em',
         }}>
-            <SearchBar />
+            <NewChat />
             <LoadingComponent loading={chats.loading}>
                 <List>
                     <For each={chats()}>
