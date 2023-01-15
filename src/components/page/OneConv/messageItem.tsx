@@ -16,12 +16,10 @@ type Props = {
 }
 
 export type SignalProps = Props & {
-    isSelf: boolean;
+    
 }
 
 export default function OneMessage(props: Props) {
-    const selfUserId = "43c0db5c-d829-4929-8efc-5e4a13bb202f"; // for Debug
-    const isSelf = () => props.signal.userId === selfUserId;
     // if isSelf align on the right else align on the left
     const Renderer = renderers[mapSignalType(props.signal.type)];
     let ref;
@@ -34,11 +32,11 @@ export default function OneMessage(props: Props) {
     return (
         <Card
             sx={{
-                maxWidth: '80%',
+                width: '100%',
             }}
         >
             <CardContent ref={ref}>
-                <Renderer isSelf={isSelf()} signal={props.signal} />
+                <Renderer signal={props.signal} />
             </CardContent>
         </Card>
     )

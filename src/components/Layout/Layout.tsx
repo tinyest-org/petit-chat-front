@@ -1,5 +1,6 @@
 import { AppBar, Typography } from "@suid/material";
-import { children, JSX } from "solid-js";
+import { children, JSX, onMount } from "solid-js";
+import { getWs } from "../../api/wsApi";
 import SearchBar from "../common/SearchBar/SearchBar";
 import ConvBar from "../page/ConvBar/ConvBar";
 
@@ -9,6 +10,12 @@ type Props = {
 
 export default function Layout(props: Props) {
     const c = children(() => props.children);
+
+    onMount(()=>{
+        const ws = getWs();
+        ws.ensureOpen();
+    })
+
     return (
         <div
             style={{
