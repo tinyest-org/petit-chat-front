@@ -7,3 +7,7 @@ export const getSignals = (chatId: ID) => {
     // else use simple http
     return api.http.get<RawSignal[]>(`/chat/${chatId}`);
 }
+
+export const createChat = (userIds: string[]) => {
+    return api.http.post(`/chat`, {userIds})
+}

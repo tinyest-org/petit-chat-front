@@ -1,4 +1,4 @@
-import { EditLocation, PlusOneOutlined } from "@suid/icons-material";
+import { A } from "@solidjs/router";
 import { IconButton } from "@suid/material";
 
 
@@ -6,10 +6,10 @@ import { IconButton } from "@suid/material";
 export default function NewChat() {
 
     return (
-        <div>
+        <A href="/chat/new">
             <IconButton>
-                <EditLocation />
+                +
             </IconButton>
-        </div>
+        </A>
     );
 }

@@ -1,11 +1,18 @@
 import { Card, CardContent, ListItem, ListItemText } from "@suid/material";
-import { Match, Switch } from "solid-js";
+import { Match, onMount, Switch } from "solid-js";
 import { mapSignalType, RawSignal } from "../../../store/signal/type";
 import Button from "../../common/Button/Button";
 import { renderers } from "./renderers/renderers";
 
+export type ExtendedSignal =
+    RawSignal & {
+        scroll?: boolean;
+        pending: boolean;
+    };
+
+
 type Props = {
-    signal: RawSignal;
+    signal: ExtendedSignal;
 }
 
 export type SignalProps = Props & {
@@ -17,14 +24,20 @@ export default function OneMessage(props: Props) {
     const isSelf = () => props.signal.userId === selfUserId;
     // if isSelf align on the right else align on the left
     const Renderer = renderers[mapSignalType(props.signal.type)];
-    console.log(props, Renderer);
+    let ref;
+    onMount(() => {
+        if (props.signal.scroll) {
+            ref.scrollIntoView();
+        }
+    })
+
     return (
         <Card
             sx={{
                 maxWidth: '80%',
             }}
         >
-            <CardContent>
+            <CardContent ref={ref}>
                 <Renderer isSelf={isSelf()} signal={props.signal} />
             </CardContent>
         </Card>

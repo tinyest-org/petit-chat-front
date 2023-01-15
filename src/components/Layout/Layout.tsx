@@ -22,6 +22,7 @@ export default function Layout(props: Props) {
                 style={{
                     display: 'flex',
                     "margin-top": "56px",
+                    width: '100%',
                 }}
             >
                 <ConvBar />
