@@ -1,12 +1,13 @@
 import { Button, Typography } from "@suid/material";
 import { useParams } from "@solidjs/router"
-import { createEffect, createResource, createSignal, For, onMount } from "solid-js";
+import { createEffect, createResource, createSignal, For, onCleanup, onMount } from "solid-js";
 import { Chat } from "../../../store/chat/type";
 import LoadingComponent from "../../common/LoadingComponent/LoadingComponent";
 import NewMessage from "./newMessage";
 import OneMessage, { ExtendedSignal } from "./messageItem";
 import { RawSignal } from "../../../store/signal/type";
 import { getSignals } from "../../../store/chat/action";
+import notificationHolder from "../../../api/notification";
 
 const chatId = '43c0db5c-d829-4929-8efc-5e4a13bb202f';
 
@@ -14,6 +15,18 @@ async function fetchMessages(id: string): Promise<ExtendedSignal[]> {
     const res = await getSignals(id);
     return res.reverse().filter(e => e.content !== null).map(e => ({ ...e, pending: false }));
 }
+export function distinct<T, U>(a: T[], getter: (item: T) => U) {
+    const set = new Set<U>();
+    return a.filter(item => {
+      const t = getter(item);
+      if (set.has(t)) {
+        return false;
+      } else {
+        set.add(t);
+        return true;
+      }
+    });
+  }
 
 export default function OneConv() {
 
@@ -31,13 +44,28 @@ export default function OneConv() {
         });
     }
 
+
+    onMount(() => {
+        notificationHolder.getHandle('newMessage').registerHandler('oneConv', (s) => {
+            console.log('new message', s);
+            addSignal([s]);
+        });
+    });
+
+    onCleanup(() => {
+        notificationHolder.getHandle('newMessage').unregisterHandler('oneConv');
+    })
+
+
     const addSignal = (s: RawSignal[]) => {
         // does not work correctly
         mutate(e => {
             const b = [...s].map(e => ({ ...e, pending: false }));
             const last = { ...b[b.length - 1], scroll: true };
             b[s.length - 1] = last;
-            return [...e, ...b];
+            const res = distinct([...e, ...b], a => a.uuid);
+            console.log('res', res);
+            return res;
         });
     }
 

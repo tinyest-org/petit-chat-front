@@ -1,3 +1,4 @@
+import { RawSignal } from "../store/signal/type";
 import { api, API } from "./api";
 import { Message } from "./ws/wsUtils";
 
@@ -5,7 +6,7 @@ type Handler<T> = (t: T) => unknown;
 
 class Handle<T> {
 
-    private handlers: { name: string, handler: Handler<T> }[]  =[];
+    private handlers: { name: string, handler: Handler<T> }[] = [];
     // private readonly holder: NotificationHolder<unknown>;
 
     constructor() {
@@ -52,7 +53,7 @@ export class NotificationHolder<T extends { [name: string]: Handle<any> }> {
 
     private onMessage = (msg: MessageEvent<any>) => {
         const { data } = msg;
-        const { subject, content }: {content: string, subject: string} = JSON.parse(data);
+        const { subject, content }: { content: string, subject: string } = JSON.parse(data);
         console.log("[WS]:", msg);
         if (subject) {
             this.handles[subject].onMessage(content);
@@ -62,11 +63,7 @@ export class NotificationHolder<T extends { [name: string]: Handle<any> }> {
 
 
 const notificationHolder = new NotificationHolder(api, {
-    'newMessage': new Handle<{content: string, sender: string, chatId: string}>(),
+    'newMessage': new Handle<RawSignal & { chatId: string }>(),
 });
 
 export default notificationHolder;
-
-notificationHolder.getHandle('newMessage').registerHandler('yay', msg => {
-    msg.content
-})

@@ -16,7 +16,7 @@ export default function OneConv(props: Props) {
     const [lastMessage, setLastMessage] = createSignal<string>();
     
     onMount(() => {
-        notificationHolder.getHandle('newMessage').registerHandler('msg', ({ content, sender, chatId }) => {
+        notificationHolder.getHandle('newMessage').registerHandler('msg', ({chatId, content, userId}) => {
             if (chatId == props.chat.id) {
                 setLastMessage(content);
                 console.log('e', props.chat.id === chatId)

@@ -3,6 +3,7 @@ import { ID } from "../common/type"
 
 
 export type RawSignal = {
+    uuid: ID;
     createdAt: ID;
     content: string;
     type: number;
