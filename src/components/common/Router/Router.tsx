@@ -1,5 +1,5 @@
 import { Routes, Route } from "@solidjs/router"
-import Layout from "../../Layout/Layout"
+import Layout from "../Layout/Layout"
 import NewConv from "../../page/NewConv/NewConv"
 import OneConv from "../../page/OneConv/OneConv"
 import SearchMessages from "../../page/OneConv/SearchMessages"

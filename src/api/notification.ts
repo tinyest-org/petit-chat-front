@@ -1,10 +1,11 @@
 import { api, API } from "./api";
+import { Message } from "./ws/wsUtils";
 
 type Handler<T> = (t: T) => unknown;
 
 class Handle<T> {
 
-    private handlers: { name: string, handler: Handler<T> }[];
+    private handlers: { name: string, handler: Handler<T> }[]  =[];
     // private readonly holder: NotificationHolder<unknown>;
 
     constructor() {
@@ -20,7 +21,10 @@ class Handle<T> {
     }
 
     private preparePayload(raw: any): T {
-        return raw as unknown as T; // TODO: proper handle
+        if (typeof raw === "string") {
+            return JSON.parse(raw) as unknown as T; // TODO: proper handle
+        }
+        throw new Error('data type not supported')
     }
 
     onMessage = (raw: any) => {
@@ -39,20 +43,26 @@ export class NotificationHolder<T extends { [name: string]: Handle<any> }> {
     constructor(api: API, handles: T) {
         this.api = api;
         this.handles = handles;
+        this.api.ws.onMessage = this.onMessage
     }
 
     public getHandle = (name: keyof T) => {
         return this.handles[name];
     }
 
-    private onMessage = () => {
-
-    }
+    private onMessage = (msg: MessageEvent<any>) => {
+        const { data } = msg;
+        const { subject, content }: {content: string, subject: string} = JSON.parse(data);
+        console.log("[WS]:", msg);
+        if (subject) {
+            this.handles[subject].onMessage(content);
+        }
+    };
 }
 
 
 const notificationHolder = new NotificationHolder(api, {
-    'newMessage': new Handle<{ content: string }>(),
+    'newMessage': new Handle<{content: string, sender: string, chatId: string}>(),
 });
 
 export default notificationHolder;

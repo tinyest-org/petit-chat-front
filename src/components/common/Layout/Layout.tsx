@@ -1,8 +1,9 @@
 import { AppBar, Typography } from "@suid/material";
 import { children, JSX, onMount } from "solid-js";
-import { getWs } from "../../api/wsApi";
-import SearchBar from "../common/SearchBar/SearchBar";
-import ConvBar from "../page/ConvBar/ConvBar";
+import { api } from "../../../api/api";
+import { getWs } from "../../../api/wsApi";
+import SearchBar from "../SearchBar/SearchBar";
+import ConvBar from "../../page/ConvBar/ConvBar";
 
 type Props = {
     children: JSX.Element;
@@ -12,8 +13,7 @@ export default function Layout(props: Props) {
     const c = children(() => props.children);
 
     onMount(()=>{
-        const ws = getWs();
-        ws.ensureOpen();
+        api.mountNotifications().then(() => console.log('ws open'));
     })
 
     return (

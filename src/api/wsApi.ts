@@ -17,7 +17,6 @@ const getWsAddr = () => {
     const wsAddr = `ws://localhost:8090/ws`;
     return wsAddr;
   } else {
-    return "wss://kiwix.gamma.junior-entreprises.com/api/ws";
     const wsAddr = `wss://${window.location.hostname}/api/ws`;
     return wsAddr;
   }
@@ -53,12 +52,3 @@ export function getWs() {
   const ws = window[WS_TOKEN];
   return ws as WebsocketConnection;
 }
-
-// const wsOpenAtom = atom<boolean>({
-//   key: "wsOpen",
-//   default: false,
-// });
-
-// export const useSetWsOpen = () => useSetRecoilState(wsOpenAtom);
-
-// export const useIsWsOpen = () => useRecoilState(wsOpenAtom);

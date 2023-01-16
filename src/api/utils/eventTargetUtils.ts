@@ -35,7 +35,7 @@ export abstract class EventSourceHandler {
 
     constructor(eventSourceProvider: EventSourceProducer, onOpen: (open: boolean) => void) {
         // @ts-ignore
-        this.snackbar = null;
+        this.snackbar = (a, b) => {};
         this.eventSourceProvider = eventSourceProvider;
         this.setOpen = onOpen;
         this.opening = false;
