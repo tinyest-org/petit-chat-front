@@ -8,6 +8,7 @@ import OneMessage, { ExtendedSignal } from "./messageItem";
 import { RawSignal } from "../../../store/signal/type";
 import { getSignals } from "../../../store/chat/action";
 import notificationHolder from "../../../api/notification";
+import { distinct } from "../../utils/utils";
 
 const chatId = '43c0db5c-d829-4929-8efc-5e4a13bb202f';
 
@@ -15,18 +16,6 @@ async function fetchMessages(id: string): Promise<ExtendedSignal[]> {
     const res = await getSignals(id);
     return res.reverse().filter(e => e.content !== null).map(e => ({ ...e, pending: false }));
 }
-export function distinct<T, U>(a: T[], getter: (item: T) => U) {
-    const set = new Set<U>();
-    return a.filter(item => {
-      const t = getter(item);
-      if (set.has(t)) {
-        return false;
-      } else {
-        set.add(t);
-        return true;
-      }
-    });
-  }
 
 export default function OneConv() {
 
@@ -37,6 +26,7 @@ export default function OneConv() {
 
     const scroll = () => {
         mutate(e => {
+            e = e || [];
             const b = [...e];
             const last = { ...e[e.length - 1], scroll: true };
             b[e.length - 1] = last;
@@ -58,13 +48,12 @@ export default function OneConv() {
 
 
     const addSignal = (s: RawSignal[]) => {
-        // does not work correctly
         mutate(e => {
+            e = e || [];
             const b = [...s].map(e => ({ ...e, pending: false }));
             const last = { ...b[b.length - 1], scroll: true };
             b[s.length - 1] = last;
-            const res = distinct([...e, ...b], a => a.uuid);
-            console.log('res', res);
+            const res = distinct([...e, ...b], a => a.uuid); // prevent having the same twice
             return res;
         });
     }
