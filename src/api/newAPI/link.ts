@@ -56,13 +56,22 @@ export abstract class BaseHttpLink<T extends {}, R> implements Link<T, R> {
     }
 
     abstract query(t: T): Promise<R | undefined>;
+    protected abstract resultExtractor(r: Response): Promise<R | undefined>;
+}
+
+abstract class JsonHtppLink<T extends {}, R> extends BaseHttpLink<T, R> {
+    protected async resultExtractor(r: Response): Promise<R | undefined> {
+        return JSON.parse(await r.text());
+    }
 }
 
 // those are json links -> should make it clear
 // TODO: add support for protobuf link
-export class GetHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
-    query(t: T): Promise<R> {
-        return this.api.get<R>(this.formatUrl(this.paramExtractor(t)));
+export class GetJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
+    async query(t: T): Promise<R | undefined> {
+        const { path, query } = this.paramExtractor(t);
+        const res = await this.api.rawHttpQuery<R>(this.formatUrl({ path, query }), "GET", undefined);
+        return this.resultExtractor(res);
     }
 }
 
