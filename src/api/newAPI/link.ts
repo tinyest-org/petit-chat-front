@@ -84,9 +84,15 @@ export class PatchHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
 }
 export class DeleteHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
     query(t: T): Promise<R> {
-        const { body, path, query } = this.paramExtractor(t);
+        const { path, query } = this.paramExtractor(t);
         return this.api.del<R>(this.formatUrl({ path, query }));
     }
 }
 
-const getChat = new GetHttpLink<{ chatId: ID }, RawSignal[]>(httpApi, '/chat/{chatId}/signals', ({ chatId }) => ({ path: { chatId } }));
+const httpGetChat = new GetHttpLink<{ chatId: ID }, RawSignal[]>(httpApi, '/chat/{chatId}/signals', ({ chatId }) => ({ path: { chatId } }));
+const wsGetChat: Link<{ chatId: ID }, undefined> = null as any;
+// will use ws first and then fallback to http if not available
+export const getChat = new MultiLink([wsGetChat, httpGetChat]);
+getChat.query({ chatId: 'dev' }).then(resp => {
+    console.log(resp);
+})
