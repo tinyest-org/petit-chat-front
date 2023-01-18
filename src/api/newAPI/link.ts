@@ -89,7 +89,12 @@ export class DeleteHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
     }
 }
 
-const httpGetChat = new GetHttpLink<{ chatId: ID }, RawSignal[]>(httpApi, '/chat/{chatId}/signals', ({ chatId }) => ({ path: { chatId } }));
+function makeGet<T extends {}, R>(url: string, paramExtractor: ParamExtractor<T>) {
+    const httpGet = new GetHttpLink<T, R>(httpApi, url, paramExtractor);
+    return httpGet;
+}
+
+const httpGetChat = makeGet<{ chatId: ID }, RawSignal[]>('/chat/{chatId}/signals', ({ chatId }) => ({ path: { chatId } }));
 const wsGetChat: Link<{ chatId: ID }, undefined> = null as any;
 // will use ws first and then fallback to http if not available
 export const getChat = new MultiLink([wsGetChat, httpGetChat]);

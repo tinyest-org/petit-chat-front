@@ -58,14 +58,12 @@ export class HttpAPI {
     this.queryPreparator = queryPreparator;
   }
 
-  httpQuery = async <T>(
+  rawHttpQuery = async <T>(
     path: string,
     method: Method,
     body?: any,
-    empty = false,
-    json: boolean = true,
     options: FetchOptions = defaultFetchOptions,
-  ): Promise<T> => {
+  ) => {
     const headers = new Headers();
     await this.securityProvider.prepareHeaders(headers);
 
@@ -95,8 +93,20 @@ export class HttpAPI {
         throw new HTTPRequestError(res.status, "Unknown error");
       }
     }
-    // handling void result
+    return res;
+  }
 
+  httpQuery = async <T>(
+    path: string,
+    method: Method,
+    body?: any,
+    empty = false,
+    json: boolean = true,
+    options: FetchOptions = defaultFetchOptions,
+  ): Promise<T> => {
+    const res = await this.rawHttpQuery(path, method, body, options);
+    
+    // handling void result
     const text = await (options.cache ? this.cache.handleResponse(path, res) : res.text());
 
     if (res.headers.get("content-length") === "0" || res.status === 204 || empty || text.length == 0) {
