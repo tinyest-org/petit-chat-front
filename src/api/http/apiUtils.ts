@@ -39,6 +39,7 @@ export type FormatOption = "json" | "text" | "blob" | "multipart";
 export interface SecurityProvider {
   makeHeaderFields(): Promise<{ [key: string]: string }>;
   prepareHeaders(headers: Headers): Promise<void>;
+  isAuthenticated(): boolean;
   refresh(): Promise<boolean>;
   login(): void;
 }
