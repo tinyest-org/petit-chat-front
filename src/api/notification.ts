@@ -4,7 +4,7 @@ import { Message } from "./ws/wsUtils";
 
 type Handler<T> = (t: T) => unknown;
 
-class Handle<T> {
+export abstract class Handle<T> {
 
     private handlers: { name: string, handler: Handler<T> }[] = [];
     // private readonly holder: NotificationHolder<unknown>;
@@ -21,18 +21,23 @@ class Handle<T> {
         this.handlers = this.handlers.filter(e => e.name !== name);
     }
 
-    private preparePayload(raw: any): T {
-        if (typeof raw === "string") {
-            return JSON.parse(raw) as unknown as T; // TODO: proper handle
-        }
-        throw new Error('data type not supported')
-    }
+    protected abstract preparePayload(raw: any): T;
 
     onMessage = (raw: any) => {
         const prepared = this.preparePayload(raw);
         this.handlers.forEach(h => {
             h.handler(prepared);
         });
+    }
+}
+
+
+export class JsonHandle<T> extends Handle<T> {
+    protected preparePayload(raw: any): T {
+        if (typeof raw === "string") {
+            return JSON.parse(raw) as unknown as T; // TODO: proper handle
+        }
+        throw new Error('data type not supported')
     }
 }
 
@@ -44,11 +49,16 @@ export class NotificationHolder<T extends { [name: string]: Handle<any> }> {
     constructor(api: API, handles: T) {
         this.api = api;
         this.handles = handles;
-        this.api.ws.onMessage = this.onMessage
+        // TODO: fix, not very clean
+        this.api.ws.onMessage = this.onMessage;
     }
 
     public getHandle = (name: keyof T) => {
         return this.handles[name];
+    }
+
+    public pushNotification(subject: string, content: string) {
+        this.handles[subject].onMessage(content);
     }
 
     private onMessage = (msg: MessageEvent<any>) => {
@@ -63,7 +73,7 @@ export class NotificationHolder<T extends { [name: string]: Handle<any> }> {
 
 
 const notificationHolder = new NotificationHolder(api, {
-    'newMessage': new Handle<RawSignal & { chatId: string }>(),
+    'newMessage': new JsonHandle<RawSignal & { chatId: string }>(),
 });
 
 export default notificationHolder;

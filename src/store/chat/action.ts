@@ -9,5 +9,10 @@ export const getSignals = (chatId: ID) => {
 }
 
 export const createChat = (userIds: string[]) => {
-    return api.http.post(`/chat`, {userIds})
+    return api.http.post(`/chat`, { userIds })
+}
+
+
+export const createThread = (chatId: ID, signalId: ID, text: string) => {
+    return api.http.post(`/chat/${chatId}/${signalId}`, { content: text });
 }
