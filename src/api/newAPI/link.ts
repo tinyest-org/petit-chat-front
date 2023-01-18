@@ -58,6 +58,8 @@ export abstract class BaseHttpLink<T extends {}, R> implements Link<T, R> {
     abstract query(t: T): Promise<R | undefined>;
 }
 
+// those are json links -> should make it clear
+// TODO: add support for protobuf link
 export class GetHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
     query(t: T): Promise<R> {
         return this.api.get<R>(this.formatUrl(this.paramExtractor(t)));
