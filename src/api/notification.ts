@@ -23,7 +23,7 @@ export abstract class Handle<T> {
 
     protected abstract preparePayload(raw: any): T;
 
-    private onMessage = (raw: any) => {
+    onMessage = (raw: any) => {
         const prepared = this.preparePayload(raw);
         this.handlers.forEach(h => {
             h.handler(prepared);

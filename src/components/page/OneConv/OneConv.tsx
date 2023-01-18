@@ -53,8 +53,7 @@ export default function OneConv() {
             const b = [...s].map(e => ({ ...e, pending: false }));
             const last = { ...b[b.length - 1], scroll: true };
             b[s.length - 1] = last;
-            const res = distinct([...e, ...b], a => a.uuid); // prevent having the same twice
-            return res;
+            return distinct([...e, ...b], a => a.uuid); // prevent having the same twice
         });
     }
 

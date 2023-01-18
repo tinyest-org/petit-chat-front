@@ -50,8 +50,9 @@ export default function NewConv() {
     }
 
     createEffect(()=>{
-        if (currentUsers()) {
-            setUsers(currentUsers().map(e => e.id));
+        const current = currentUsers();
+        if (current) {
+            setUsers(current.map(e => e.id));
         }
     })
 

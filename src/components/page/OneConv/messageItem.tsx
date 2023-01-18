@@ -22,7 +22,7 @@ export type SignalProps = Props & {
 export default function OneMessage(props: Props) {
     // if isSelf align on the right else align on the left
     const Renderer = renderers[mapSignalType(props.signal.type)];
-    let ref;
+    let ref: any;
     onMount(() => {
         if (props.signal.scroll) {
             ref.scrollIntoView();

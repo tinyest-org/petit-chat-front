@@ -4,7 +4,7 @@ import { RawSignal } from "./type"
 
 
 export const sendSignal = (chatId: ID, text: string, files: File[]) => {
-    const body = {
+    const body: any = {
         content: text
     };
     files.forEach(f => {

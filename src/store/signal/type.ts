@@ -6,7 +6,7 @@ export type RawSignal = {
     uuid: ID;
     createdAt: ID;
     content: string;
-    type: number;
+    type: keyof typeof mapping;
     userId: ID;
 }
 
@@ -28,6 +28,6 @@ const mapping = {
     5: SignalType.IMAGE,
 }
 
-export function mapSignalType(type: number): SignalType {
+export function mapSignalType(type: keyof typeof mapping): SignalType {
     return mapping[type];
 }
