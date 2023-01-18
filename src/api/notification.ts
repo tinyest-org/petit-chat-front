@@ -23,7 +23,7 @@ export abstract class Handle<T> {
 
     protected abstract preparePayload(raw: any): T;
 
-    onMessage = (raw: any) => {
+    private onMessage = (raw: any) => {
         const prepared = this.preparePayload(raw);
         this.handlers.forEach(h => {
             h.handler(prepared);
@@ -49,19 +49,19 @@ export class NotificationHolder<T extends { [name: string]: Handle<any> }> {
     constructor(api: API, handles: T) {
         this.api = api;
         this.handles = handles;
-        // TODO: fix, not very clean
-        this.api.ws.onMessage = this.onMessage;
+        // TODO: fix, not very clean -> we intercept the messages from the ws handler
+        this.api.ws.onMessage = this.onWsMessage;
     }
 
     public getHandle = (name: keyof T) => {
         return this.handles[name];
     }
 
-    public pushNotification(subject: string, content: string) {
+    public pushNotification(subject: string, content: any) {
         this.handles[subject].onMessage(content);
     }
 
-    private onMessage = (msg: MessageEvent<any>) => {
+    private onWsMessage = (msg: MessageEvent<any>) => {
         const { data } = msg;
         const { subject, content }: { content: string, subject: string } = JSON.parse(data);
         console.log("[WS]:", msg);
