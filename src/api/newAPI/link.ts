@@ -35,6 +35,15 @@ type ParamExtractor<T> = (t: T) => {
     body?: { [key: string]: any } | undefined,
 }
 
+const format = (string: string, args: { [k: string]: any }) => {
+    for (const key in args) {
+        const string_key = '{' + key + '}';
+        string = string.replace(new RegExp(string_key, 'g'), args[key]);
+    }
+    return string;
+};
+
+
 export abstract class BaseHttpLink<T extends {}, R> implements Link<T, R> {
     protected readonly api: HttpAPI;
     public readonly url: string;
@@ -46,9 +55,13 @@ export abstract class BaseHttpLink<T extends {}, R> implements Link<T, R> {
         this.url = url;
         this.paramExtractor = paramExtractor;
     }
-
-    protected formatUrl(props: { query?: { [key: string]: any }, path?: { [key: string]: any } }): string {
-        return '';
+    /**
+     * Formats path using {} notation and adds query params
+     * @param props 
+     * @returns 
+     */
+    protected formatUrl({ path, query }: { query?: { [key: string]: any }, path?: { [key: string]: any } }): string {
+        return format(this.url, { ...path });
     }
 
     available() {
@@ -75,25 +88,25 @@ export class GetJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     }
 }
 
-export class PostHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+export class PostHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     query(t: T): Promise<R> {
         const { body, path, query } = this.paramExtractor(t);
         return this.api.post<R>(this.formatUrl({ path, query }), body);
     }
 }
-export class PutHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+export class PutHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     query(t: T): Promise<R> {
         const { body, path, query } = this.paramExtractor(t);
         return this.api.put<R>(this.formatUrl({ path, query }), body);
     }
 }
-export class PatchHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+export class PatchHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     query(t: T): Promise<R> {
         const { body, path, query } = this.paramExtractor(t);
         return this.api.patch<R>(this.formatUrl({ path, query }), body);
     }
 }
-export class DeleteHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+export class DeleteHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     query(t: T): Promise<R> {
         const { path, query } = this.paramExtractor(t);
         return this.api.del<R>(this.formatUrl({ path, query }));
@@ -101,7 +114,7 @@ export class DeleteHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
 }
 
 function makeGet<T extends {}, R>(url: string, paramExtractor: ParamExtractor<T>) {
-    const httpGet = new GetHttpLink<T, R>(httpApi, url, paramExtractor);
+    const httpGet = new GetJsonHttpLink<T, R>(httpApi, url, paramExtractor);
     return httpGet;
 }
 
