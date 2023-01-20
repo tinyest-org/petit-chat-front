@@ -8,9 +8,9 @@ export interface Cache {
   getItem(path: string): Promise<CacheEntry | undefined>;
 }
 
-type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-type FetchOptions = {
+export type FetchOptions = {
   cache: boolean;
   formatOption: FormatOption,
 };

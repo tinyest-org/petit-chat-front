@@ -1,11 +1,29 @@
 import { ID } from "../../store/common/type";
 import { RawSignal } from "../../store/signal/type";
-import { HttpAPI } from "../http/apiUtils";
+import { FetchOptions, HttpAPI, HTTPRequestError, Method } from "../http/apiUtils";
 import { httpApi } from "../httpApi";
 
 export interface Link<T extends {}, R> {
     available(): boolean;
     query(t: T): Promise<R | undefined>;
+    // TODO: ajouter la notion d'encoder et de decoder
+}
+/**
+ * @param R input of function 
+ * @param R return of function 
+ * @param I input of endpoint 
+ * @param O output of endpoint 
+ */
+abstract class AbstactLink<
+    T extends {},
+    R,
+    I,
+    O
+> implements Link<T, R> {
+    abstract available(): boolean;
+    abstract query(t: T): Promise<R | undefined>;
+    protected abstract encoder(t: T): Promise<I>;
+    protected abstract decoder(o: O): Promise<R>;
 }
 
 export class MultiLink<T extends {}, R> implements Link<T, R> {
@@ -29,33 +47,42 @@ export class MultiLink<T extends {}, R> implements Link<T, R> {
     }
 }
 
-type ParamExtractor<T> = (t: T) => {
-    query?: { [key: string]: any } | undefined,
-    path?: { [key: string]: any } | undefined,
-    body?: { [key: string]: any } | undefined,
-}
+type ParamExtractor<T> = (t: T) => HttpParams;
 
 const format = (string: string, args: { [k: string]: any }) => {
     for (const key in args) {
         const string_key = '{' + key + '}';
         string = string.replace(new RegExp(string_key, 'g'), args[key]);
     }
+    console.log(string);
     return string;
 };
 
 
-export abstract class BaseHttpLink<T extends {}, R> implements Link<T, R> {
+type HttpParams = {
+    query?: { [key: string]: any },
+    path?: { [key: string]: any },
+    body?: any,
+    headers?: { [key: string]: string },
+    options?: FetchOptions,
+}
+
+export abstract class BaseHttpLink<T extends {}, R> extends AbstactLink<T, R, HttpParams, Response> {
     protected readonly api: HttpAPI;
     public readonly url: string;
 
     protected readonly paramExtractor: ParamExtractor<T>;
 
+    abstract method: Method;
+
     constructor(api: HttpAPI, url: string, paramExtractor: ParamExtractor<T>) {
+        super();
         this.api = api;
         this.url = url;
         this.paramExtractor = paramExtractor;
     }
     /**
+     * TODO: finish
      * Formats path using {} notation and adds query params
      * @param props 
      * @returns 
@@ -68,49 +95,103 @@ export abstract class BaseHttpLink<T extends {}, R> implements Link<T, R> {
         return this.api.securityProvider.isAuthenticated();
     }
 
-    abstract query(t: T): Promise<R | undefined>;
-    protected abstract resultExtractor(r: Response): Promise<R | undefined>;
+    async query(t: T): Promise<R | undefined> {
+        const { body, options, query, path, headers: rawHeaders } = await this.encoder(t);
+        const headers = new Headers();
+        await this.api.securityProvider.prepareHeaders(headers);
+        const preparedPath = this.formatUrl({ path, query });
+        if (options?.cache) {
+            const cached = await this.api.cache.getItem(preparedPath);
+            if (cached) {
+                headers.append("If-Modified-Since", cached.fetchedAt);
+            }
+        }
+        if (rawHeaders) {
+            Object.keys(rawHeaders).forEach(k => {
+                headers.append(k, rawHeaders[k]);
+            });
+        }
+        // TODO: remove httpAPI
+
+        const res = await fetch(this.api.baseUrl + preparedPath, {
+            method: this.method,
+            headers,
+            body: body || undefined,
+        });
+
+        if (res.status >= 400) {
+            try {
+                if (res.status === 401) {
+                    this.api.securityProvider.login();
+                } else {
+                    throw new HTTPRequestError(res.status, await res.json()); // todo better handle error
+                }
+            } catch {
+                throw new HTTPRequestError(res.status, "Unknown error");
+            }
+        }
+        return this.decoder(res);
+    }
+    // TODO: implem le call api apres le passage de l'encoder pour préparer les données
 }
 
-abstract class JsonHtppLink<T extends {}, R> extends BaseHttpLink<T, R> {
-    protected async resultExtractor(r: Response): Promise<R | undefined> {
+abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+    // encoder should prepare the url from {query, path} and body and headers
+    protected async decoder(r: Response): Promise<R> {
         return JSON.parse(await r.text());
+    }
+
+    protected async encoder(t: T) {
+        const { query, path, body } = this.paramExtractor(t);
+        const headers = {
+            "Content-Type": "application/json",
+            "Accept": "text/plain, application/json",
+        }
+        return { query, path, body: JSON.stringify(body), headers };
+    }
+}
+
+abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+    // encoder should prepare the url from {query, path} and body and headers
+    protected async decoder(r: Response): Promise<R> {
+        return JSON.parse(await r.text());
+    }
+
+    protected async encoder(t: T) {
+        const { query, path, body } = this.paramExtractor(t);
+        const form = new FormData();
+        // TODO: finish handle files
+        Object.keys(body).forEach(k => {
+            const v = body[k];
+            if (typeof v === "string") {
+                form.append(k, v);
+            }
+        });
+        return { query, path, body: form };
     }
 }
 
 // those are json links -> should make it clear
 // TODO: add support for protobuf link
-export class GetJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
-    async query(t: T): Promise<R | undefined> {
-        const { path, query } = this.paramExtractor(t);
-        const res = await this.api.rawHttpQuery<R>(this.formatUrl({ path, query }), "GET", undefined);
-        return this.resultExtractor(res);
-    }
+export class GetJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
+    method: Method = "GET";
 }
 
-export class PostJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
-    query(t: T): Promise<R> {
-        const { body, path, query } = this.paramExtractor(t);
-        return this.api.post<R>(this.formatUrl({ path, query }), body);
-    }
+export class PostJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
+    method: Method = "POST";
 }
-export class PutJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
-    query(t: T): Promise<R> {
-        const { body, path, query } = this.paramExtractor(t);
-        return this.api.put<R>(this.formatUrl({ path, query }), body);
-    }
+export class PostMultipartHttpLink<T extends {}, R> extends JsonResponseMultiPartHttpLink<T, R> {
+    method: Method = "POST";
 }
-export class PatchJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
-    query(t: T): Promise<R> {
-        const { body, path, query } = this.paramExtractor(t);
-        return this.api.patch<R>(this.formatUrl({ path, query }), body);
-    }
+
+export class PutJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
+    method: Method = "PUT";
 }
-export class DeleteJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
-    query(t: T): Promise<R> {
-        const { path, query } = this.paramExtractor(t);
-        return this.api.del<R>(this.formatUrl({ path, query }));
-    }
+export class PatchJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
+    method: Method = "PATCH";
+}
+export class DeleteJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
+    method: Method = "DELETE";
 }
 
 function makeGet<T extends {}, R>(url: string, paramExtractor: ParamExtractor<T>) {
@@ -122,6 +203,3 @@ const httpGetChat = makeGet<{ chatId: ID }, RawSignal[]>('/chat/{chatId}/signals
 const wsGetChat: Link<{ chatId: ID }, undefined> = null as any;
 // will use ws first and then fallback to http if not available
 export const getChat = new MultiLink([wsGetChat, httpGetChat]);
-getChat.query({ chatId: 'dev' }).then(resp => {
-    console.log(resp);
-})

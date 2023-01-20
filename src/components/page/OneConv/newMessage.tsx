@@ -17,7 +17,11 @@ export default function NewSignal(props: Props) {
     const [textContent, setText] = createSignal('');
 
     const newMessage = () => {
-        sendSignal(props.chatId, textContent(), []).then(props.addSignal);
+        sendSignal(props.chatId, textContent(), []).then(r => {
+            if (r) {
+                props.addSignal(r);
+            }
+        });
         setText('');
     }
 
