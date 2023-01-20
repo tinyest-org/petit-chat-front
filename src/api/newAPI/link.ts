@@ -88,25 +88,25 @@ export class GetJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     }
 }
 
-export class PostHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
+export class PostJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     query(t: T): Promise<R> {
         const { body, path, query } = this.paramExtractor(t);
         return this.api.post<R>(this.formatUrl({ path, query }), body);
     }
 }
-export class PutHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
+export class PutJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     query(t: T): Promise<R> {
         const { body, path, query } = this.paramExtractor(t);
         return this.api.put<R>(this.formatUrl({ path, query }), body);
     }
 }
-export class PatchHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
+export class PatchJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     query(t: T): Promise<R> {
         const { body, path, query } = this.paramExtractor(t);
         return this.api.patch<R>(this.formatUrl({ path, query }), body);
     }
 }
-export class DeleteHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
+export class DeleteJsonHttpLink<T extends {}, R> extends JsonHtppLink<T, R> {
     query(t: T): Promise<R> {
         const { path, query } = this.paramExtractor(t);
         return this.api.del<R>(this.formatUrl({ path, query }));
