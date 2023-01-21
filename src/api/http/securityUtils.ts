@@ -15,6 +15,10 @@ export class NoopSecurityProvider implements SecurityProvider {
     return true;
   }
 
+  isAuthenticated(): boolean {
+      return true;
+  }
+
   getToken(): string {
     return "";
   }
@@ -46,6 +50,10 @@ export class KeycloakSecurityProvider implements SecurityProvider {
 
   getToken(): string {
     return this.keycloak.token || "";
+  }
+
+  isAuthenticated(): boolean {
+      return this.keycloak.authenticated || false;
   }
 
   isExpired(): boolean {

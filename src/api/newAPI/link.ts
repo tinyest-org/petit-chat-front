@@ -1,12 +1,9 @@
-import { ID } from "../../store/common/type";
-import { RawSignal } from "../../store/signal/type";
 import { FetchOptions, HttpAPI, HTTPRequestError, Method } from "../http/apiUtils";
 import { httpApi } from "../httpApi";
 
 export interface Link<T extends {}, R> {
     available(): boolean;
     query(t: T): Promise<R | undefined>;
-    // TODO: ajouter la notion d'encoder et de decoder
 }
 
 interface Converter<T, R> {
@@ -137,12 +134,16 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstactLink<T, R, Ht
         }
         return this.decoder.convert(res);
     }
-    // TODO: implem le call api apres le passage de l'encoder pour préparer les données
 }
 
 class JsonDecoder<R> implements Converter<Response, R> {
-    async convert(r: Response): Promise<R> {
-        return JSON.parse(await r.text());
+    async convert(response: Response): Promise<R> {
+        const text = await response.text();
+        // handle empty case
+        if (response.headers.get("content-length") === "0" || response.status === 204 || text.length == 0) {
+            return null as unknown as R;
+        }
+        return JSON.parse(text);
     }
 }
 
@@ -181,13 +182,13 @@ class MultipartQueryEncoder<T> implements Converter<T, HttpParams> {
 }
 
 abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
-    protected decoder = new JsonDecoder<R>();
-    protected encoder: Converter<T, HttpParams> = new JsonQueryEncoder(this.paramExtractor);
+    protected decoder = new JsonDecoder<R>(); // could be added in constructor too
+    protected encoder = new JsonQueryEncoder<T>(this.paramExtractor);
 }
 
 abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
-    protected decoder = new JsonDecoder<R>();
-    protected encoder: Converter<T, HttpParams> = new MultipartQueryEncoder(this.paramExtractor);
+    protected decoder = new JsonDecoder<R>(); // could be added in constructor too
+    protected encoder = new MultipartQueryEncoder<T>(this.paramExtractor);
 }
 
 // those are json links -> should make it clear
