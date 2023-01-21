@@ -8,6 +8,11 @@ export interface Link<T extends {}, R> {
     query(t: T): Promise<R | undefined>;
     // TODO: ajouter la notion d'encoder et de decoder
 }
+
+interface Converter<T, R> {
+    convert(t: T): Promise<R>;
+}
+
 /**
  * @param R input of function 
  * @param R return of function 
@@ -22,8 +27,8 @@ abstract class AbstactLink<
 > implements Link<T, R> {
     abstract available(): boolean;
     abstract query(t: T): Promise<R | undefined>;
-    protected abstract encoder(t: T): Promise<I>;
-    protected abstract decoder(o: O): Promise<R>;
+    protected abstract encoder: Converter<T, I>;
+    protected abstract decoder: Converter<O, R>;
 }
 
 export class MultiLink<T extends {}, R> implements Link<T, R> {
@@ -96,7 +101,7 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstactLink<T, R, Ht
     }
 
     async query(t: T): Promise<R | undefined> {
-        const { body, options, query, path, headers: rawHeaders } = await this.encoder(t);
+        const { body, options, query, path, headers: rawHeaders } = await this.encoder.convert(t);
         const headers = new Headers();
         await this.api.securityProvider.prepareHeaders(headers);
         const preparedPath = this.formatUrl({ path, query });
@@ -130,18 +135,23 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstactLink<T, R, Ht
                 throw new HTTPRequestError(res.status, "Unknown error");
             }
         }
-        return this.decoder(res);
+        return this.decoder.convert(res);
     }
     // TODO: implem le call api apres le passage de l'encoder pour préparer les données
 }
 
-abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
-    // encoder should prepare the url from {query, path} and body and headers
-    protected async decoder(r: Response): Promise<R> {
+class JsonDecoder<R> implements Converter<Response, R> {
+    async convert(r: Response): Promise<R> {
         return JSON.parse(await r.text());
     }
+}
 
-    protected async encoder(t: T) {
+class JsonQueryEncoder<T> implements Converter<T, HttpParams> {
+    protected readonly paramExtractor: ParamExtractor<T>;
+    constructor(paramExtractor: ParamExtractor<T>) {
+        this.paramExtractor = paramExtractor;
+    }
+    async convert(t: T): Promise<HttpParams> {
         const { query, path, body } = this.paramExtractor(t);
         const headers = {
             "Content-Type": "application/json",
@@ -151,13 +161,12 @@ abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> 
     }
 }
 
-abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
-    // encoder should prepare the url from {query, path} and body and headers
-    protected async decoder(r: Response): Promise<R> {
-        return JSON.parse(await r.text());
+class MultipartQueryEncoder<T> implements Converter<T, HttpParams> {
+    protected readonly paramExtractor: ParamExtractor<T>;
+    constructor(paramExtractor: ParamExtractor<T>) {
+        this.paramExtractor = paramExtractor;
     }
-
-    protected async encoder(t: T) {
+    async convert(t: T): Promise<HttpParams> {
         const { query, path, body } = this.paramExtractor(t);
         const form = new FormData();
         // TODO: finish handle files
@@ -169,6 +178,16 @@ abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLi
         });
         return { query, path, body: form };
     }
+}
+
+abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+    protected decoder = new JsonDecoder<R>();
+    protected encoder: Converter<T, HttpParams> = new JsonQueryEncoder(this.paramExtractor);
+}
+
+abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+    protected decoder = new JsonDecoder<R>();
+    protected encoder: Converter<T, HttpParams> = new MultipartQueryEncoder(this.paramExtractor);
 }
 
 // those are json links -> should make it clear
@@ -199,7 +218,8 @@ function makeGet<T extends {}, R>(url: string, paramExtractor: ParamExtractor<T>
     return httpGet;
 }
 
-const httpGetChat = makeGet<{ chatId: ID }, RawSignal[]>('/chat/{chatId}/signals', ({ chatId }) => ({ path: { chatId } }));
-const wsGetChat: Link<{ chatId: ID }, undefined> = null as any;
-// will use ws first and then fallback to http if not available
-export const getChat = new MultiLink([wsGetChat, httpGetChat]);
+// example
+// const httpGetChat = makeGet<{ chatId: ID }, RawSignal[]>('/chat/{chatId}/signals', ({ chatId }) => ({ path: { chatId } }));
+// const wsGetChat: Link<{ chatId: ID }, undefined> = null as any;
+// // will use ws first and then fallback to http if not available
+// export const getChat = new MultiLink([wsGetChat, httpGetChat]);
