@@ -7,8 +7,9 @@ import NewMessage from "./newMessage";
 import OneMessage, { ExtendedSignal } from "./messageItem";
 import { RawSignal } from "../../../store/signal/type";
 import { getSignals } from "../../../store/chat/action";
-import notificationHolder from "../../../api/notification";
+// import notificationHolder from "../../../api/notification";
 import { distinct } from "../../utils/utils";
+import { newMessageHandleMulti } from "../../../api/newAPI/wsLink";
 
 const chatId = '43c0db5c-d829-4929-8efc-5e4a13bb202f';
 
@@ -36,14 +37,15 @@ export default function OneConv() {
 
 
     onMount(() => {
-        notificationHolder.getHandle('newMessage').registerHandler('oneConv', (s) => {
+        newMessageHandleMulti.onMessage('oneConv', (s) => {
             console.log('new message', s);
             addSignal([s]);
         });
     });
 
     onCleanup(() => {
-        notificationHolder.getHandle('newMessage').unregisterHandler('oneConv');
+        // TODO: remove handle case
+        // notificationHolder.getHandle('newMessage').unregisterHandler('oneConv');
     })
 
 

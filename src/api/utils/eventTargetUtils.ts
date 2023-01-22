@@ -122,5 +122,9 @@ export abstract class EventSourceHandler {
         this.setOpen(false);
         this.opening = false;
     };
+
+    public isOpen() {
+        return this.open;
+    }
 }
 

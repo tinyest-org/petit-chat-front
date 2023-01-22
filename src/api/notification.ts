@@ -72,8 +72,8 @@ export class NotificationHolder<T extends { [name: string]: Handle<any> }> {
 }
 
 
-const notificationHolder = new NotificationHolder(api, {
-    'newMessage': new JsonHandle<RawSignal & { chatId: string }>(),
-});
+// const notificationHolder = new NotificationHolder(api, {
+//     'newMessage': new JsonHandle<RawSignal & { chatId: string }>(),
+// });
 
-export default notificationHolder;
+// export default notificationHolder;

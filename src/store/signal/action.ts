@@ -1,6 +1,6 @@
 import { api } from "../../api/api";
 import { httpApi } from "../../api/httpApi";
-import { PostJsonHttpLink, PostMultipartHttpLink } from "../../api/newAPI/link";
+import { PostMultipartHttpLink } from "../../api/newAPI/httpLink";
 import { ID } from "../common/type";
 import { RawSignal } from "./type"
 
@@ -13,7 +13,6 @@ export const sendSignal = (chatId: ID, text: string, files: File[]) => {
     files.forEach(f => {
         body[f.name] = f;
     });
-    // if has ws use ws else use http
     // return api.http.post<RawSignal[]>(`/chat/${chatId}`, body, true, { cache: false, formatOption: "multipart" });
     return l.query({ chatId, body });
 }
