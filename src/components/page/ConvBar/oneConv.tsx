@@ -17,11 +17,13 @@ export default function OneConv(props: Props) {
     const [lastMessage, setLastMessage] = createSignal<string>();
 
     onMount(() => {
-        newMessageHandleMulti.onMessage('sideBar', ({chatId, content}) => {
+        newMessageHandleMulti.onMessage('sideBar', (signals) => {
             console.log('side');
-            if (chatId == props.chat.id) {
-                setLastMessage(content);
-            }
+            signals.forEach(({ content, createdAt, chatId }) => {
+                if (chatId == props.chat.id) {
+                    setLastMessage(content);
+                }
+            });
         });
     })
 

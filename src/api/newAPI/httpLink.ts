@@ -1,13 +1,12 @@
 import { FetchOptions, HttpAPI, Method } from "../http/apiUtils";
-import { HTTPRequestError, httpApi } from "../httpApi";
+import { HTTPRequestError } from "../httpApi";
 import { AbstractLink, Converter } from "./link";
 
 type ParamExtractor<T> = (t: T) => HttpParams;
 
 const format = (string: string, args: { [k: string]: any }) => {
     for (const key in args) {
-        const string_key = '{' + key + '}';
-        string = string.replace(new RegExp(string_key, 'g'), args[key]);
+        string = string.replace(new RegExp(`{${key}}`, 'g'), args[key]);
     }
     return string;
 };
@@ -118,6 +117,7 @@ class JsonQueryEncoder<T> implements Converter<T, HttpParams> {
     constructor(paramExtractor: ParamExtractor<T>) {
         this.paramExtractor = paramExtractor;
     }
+
     async convert(t: T): Promise<HttpParams> {
         const { query, path, body } = this.paramExtractor(t);
         const headers = {
@@ -133,6 +133,7 @@ class MultipartQueryEncoder<T> implements Converter<T, HttpParams> {
     constructor(paramExtractor: ParamExtractor<T>) {
         this.paramExtractor = paramExtractor;
     }
+
     async convert(t: T): Promise<HttpParams> {
         const { query, path, body } = this.paramExtractor(t);
         const form = new FormData();
@@ -178,11 +179,6 @@ export class PatchJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, 
 }
 export class DeleteJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
     method: Method = "DELETE";
-}
-
-function makeGet<T extends {}, R>(url: string, paramExtractor: ParamExtractor<T>) {
-    const httpGet = new GetJsonHttpLink<T, R>(httpApi, url, paramExtractor);
-    return httpGet;
 }
 
 // example

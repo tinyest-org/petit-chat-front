@@ -1,5 +1,3 @@
-import { FetchOptions, HttpAPI, HTTPRequestError, Method } from "../http/apiUtils";
-import { httpApi } from "../httpApi";
 
 export interface Link<T extends {}, R> {
     available(): boolean;
@@ -66,11 +64,13 @@ export class MultiLink<T extends {}, R> implements Link<T, R> {
 
 
 // bridge link should be able to implement link, while taking as input as link and transforming it's output to implement another interface
-export abstract class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
+export class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
     private inputLink: Link<T, R>;
+    private converter: Converter<R ,FR>;
 
-    constructor(inputLink: Link<T, R>) {
+    constructor(inputLink: Link<T, R>, converter: Converter<R ,FR>) {
         this.inputLink = inputLink;
+        this.converter = converter;
     }
 
     async query(t: T): Promise<undefined> {
@@ -83,8 +83,10 @@ export abstract class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
     }
 
     onMessage(name: string, f: (msg: FR) => void): void {
-        throw new Error('not implemented');
+        const w = async(r: R)  => {
+            const c = await this.converter.convert(r);
+            f(c);
+        }
+        this.inputLink.onMessage(name, w);
     }
-
-    abstract bridge(r: R): void;
 }

@@ -39,7 +39,7 @@ export default function OneConv() {
     onMount(() => {
         newMessageHandleMulti.onMessage('oneConv', (s) => {
             console.log('new message', s);
-            addSignal([s]);
+            addSignal(s);
         });
     });
 

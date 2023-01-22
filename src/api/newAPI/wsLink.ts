@@ -3,7 +3,7 @@ import { httpApi } from "../httpApi";
 import { WebsocketConnection } from "../ws/wsUtils";
 import { getWs, ws } from "../wsApi";
 import { PostMultipartHttpLink } from "./httpLink";
-import { AbstractLink, Converter, Link, MultiLink } from "./link";
+import { AbstractLink, BridgeLink, Converter, Link, MultiLink } from "./link";
 
 export class WsLinker<T extends {}, R> {
     protected readonly wsAPI: WebsocketConnection;
@@ -108,7 +108,7 @@ export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R, a
 const wsLinker = new WsLinker(getWs());
 
 // should change the way it's registered
-export const newMessageHandle = new JsonWsLink<{ chatId: string, body: any }, RawSignal & { chatId?: string }>(wsLinker, "newMessage");
+export const newMessageHandle = new JsonWsLink<{ chatId: string, body: any }, RawSignal & { chatId: string }>(wsLinker, "newMessage");
 // should change the way it's registered
 wsLinker.registerHandle("newMessage", newMessageHandle);
 
@@ -117,10 +117,13 @@ wsLinker.registerHandle("newMessage", newMessageHandle);
 // });
 
 // export default notificationHolder;
-const l = new PostMultipartHttpLink<{ chatId: string, body: any }, RawSignal[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
-export const newMessageHandleMulti = new MultiLink([newMessageHandle]);
+const l = new PostMultipartHttpLink<{ chatId: string, body: any }, (RawSignal & { chatId?: string })[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
+
+const bridged = new BridgeLink(newMessageHandle, { convert: async s => [s] });
+
+export const newMessageHandleMulti = new MultiLink([bridged, l]);
 
 
-/**
+/**                     R        FR
  * Multi -> bridge -> link -> handle
  */
