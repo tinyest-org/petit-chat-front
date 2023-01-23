@@ -5,11 +5,21 @@ import { getWs } from "../wsApi";
 import { PostMultipartHttpLink } from "./httpLink";
 import { AbstractLink, BridgeLink, Converter, Link, MultiLink } from "./link";
 
-type WsRegistrarHolder<T> = { [key in keyof T]: <E extends {}, R extends {}>(name: string) => WsLink<E, R> };
+type ArrayElement<ArrayType extends readonly unknown[]> =
+    ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
+interface BaseRegistrar {
+    name: string;
+}
+
+type WsRegistrarHolder<T extends { [k: string]: BaseRegistrar }> = {
+    [key in keyof T]: HandleWsRegistrar<T[key]>;
+};
+
 
 export class WsLinker<
     U,
-    H extends WsRegistrarHolder<U>,
+    H extends Hey<U>,
     T extends {} = {},
     R = {},
 > {
@@ -20,19 +30,20 @@ export class WsLinker<
 
     constructor(
         wsAPI: WebsocketConnection,
-        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar }
+        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar<any> }
     ) {
         this.wsAPI = wsAPI;
         this.registrars = this.buildRegistrars(registrars);
+
         // ------------------------------
-        // Todo: hijack thats not pretty
+        // TODO: hijack thats not pretty
         // should re implement everything here
         this.wsAPI.onMessage = this.internalOnMessage;
     }
 
 
     private buildRegistrars(
-        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar }
+        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar<any> }
     ): H {
         const res = {} as H;
         for (const key in registrars) {
@@ -43,7 +54,8 @@ export class WsLinker<
         return res;
     }
 
-    get register(): { [key in keyof H]: <E extends {}, R extends {}>(name: string) => WsLink<E, R> } {
+    // false, extract params
+    get register() {
         return this.registrars;
     }
 
@@ -71,23 +83,7 @@ export class WsLinker<
     }
 }
 
-/**
- * Encodes the query in order to send json query using  the 
- * {method},{body} format -> makes it easier on the server side 
- * to properly parse args and route the data
- */
-class WsJsonEncoder<T extends {}> implements Converter<T, string> {
-    method: string;
-    constructor(method: string) {
-        this.method = method;
-    }
-    async convert(t: T): Promise<string> {
-        if (t) {
-            return `${this.method},${JSON.stringify(t)}`;
-        }
-        return `${this.method},`;
-    }
-}
+
 
 class WsJsonDecoder<T extends {}> implements Converter<string, T> {
     // decode once
@@ -143,32 +139,57 @@ export class SimpleToArray<T> implements Converter<T, T[]> {
     }
 }
 
-export interface HandleWsRegistrar {
-    register<T extends {}, R extends {}>(name: string): WsLink<T, R>;
+export interface HandleWsRegistrar<S extends { name: string }> {
+    register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
 }
 
-export abstract class AbstractHandleWsRegistrar implements HandleWsRegistrar {
+// should add support for more settings
+export abstract class AbstractHandleWsRegistrar<S extends { name: string }> implements HandleWsRegistrar<S> {
     protected wsLinker: WsLinker<any, any>;
 
     constructor(wsLinker: WsLinker<any, any>) {
         this.wsLinker = wsLinker;
     }
 
-    protected bind<T extends {}, R extends {}>(name: string): WsLink<T, R> {
-        const handle = this.register<T, R>(name);
-        this.wsLinker.addHandle(name, handle);
+    protected bind<T extends {}, R extends {}>(props: S): WsLink<T, R> {
+        const handle = this.register<T, R>(props);
+        this.wsLinker.addHandle(props.name, handle);
         return handle;
     }
 
 
-    abstract register<T extends {}, R extends {}>(name: string): WsLink<T, R>;
+    abstract register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
 }
 
-class JsonHandleRegistrar extends AbstractHandleWsRegistrar {
-    register<T extends {}, R extends {}>(name: string): WsLink<T, R> {
-        return new JsonWsLink<T, R>(this.wsLinker, name);
+/**
+ * Custom
+ * ------------------------
+ */
+
+/**
+ * Encodes the query in order to send json query using  the 
+ * {method},{body} format -> makes it easier on the server side 
+ * to properly parse args and route the data
+ */
+class WsJsonEncoder<T extends {}> implements Converter<T, string> {
+    method: string;
+    constructor(method: string) {
+        this.method = method;
+    }
+    async convert(t: T): Promise<string> {
+        if (t) {
+            return `${this.method},${JSON.stringify(t)}`;
+        }
+        return `${this.method},`;
     }
 }
+
+class JsonHandleRegistrar extends AbstractHandleWsRegistrar<{ name: string, deb: string }> {
+    register<T extends {}, R extends {}>(props: { name: string, deb: string }): WsLink<T, R> {
+        return new JsonWsLink<T, R>(this.wsLinker, props.name);
+    }
+}
+
 
 
 // TODO: rename
@@ -177,7 +198,7 @@ const wsLinker = new WsLinker(getWs(), {
 });
 
 // TODO: add support for schema link
-export const newMessageHandle = wsLinker.register.json<{ chatId: string, body: any }, RawSignal & { chatId: string }>('newMessage');
+export const newMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, RawSignal & { chatId: string }>({ name: 'newMessage' });
 
 
 const l = new PostMultipartHttpLink<{ chatId: string, body: any }, (RawSignal & { chatId?: string })[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));

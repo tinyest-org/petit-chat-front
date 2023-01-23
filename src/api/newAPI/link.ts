@@ -68,6 +68,8 @@ export class MultiLink<T extends {}, R> implements Link<T, R> {
 }
 
 
+// TODO: create syntax to do:
+// brige.from(link).using(converter)
 // bridge link should be able to implement link, while taking as input as link and transforming it's output to implement another interface
 export class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
     private inputLink: Link<T, R>;
