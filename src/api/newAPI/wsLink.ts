@@ -197,11 +197,7 @@ class JsonHandleRegistrar extends AbstractHandleWsRegistrar<{ name: string, deb:
 }
 
 
-
-// TODO: rename
-const registrars: {
-    json: (linker: WsLinker<{}, {}>) => HandleWsRegistrar<{ name: string, deb: string }>
-} = {
+const registrars = {
     json: (linker: WsLinker<{}, {}>) => new JsonHandleRegistrar(linker),
 };
 const wsLinker = new WsLinker<{
