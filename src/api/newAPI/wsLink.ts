@@ -12,16 +12,19 @@ interface BaseRegistrar {
     name: string;
 }
 
-type WsRegistrarHolder<T extends { [k: string]: BaseRegistrar }> = {
-    [key in keyof T]: HandleWsRegistrar<T[key]>;
+type WsRegistrarHolder<T extends { [k: string]: HandleWsRegistrar }> = {
+    [key in keyof T]: T[key] extends HandleWsRegistrar<infer U> ? HandleWsRegistrar<U> : never;
 };
 
+export type SchemaType = {
+    [repoName: string]: any;
+};
 
 export class WsLinker<
-    U,
-    H extends Hey<U>,
-    T extends {} = {},
-    R = {},
+    H extends { [k: string]: HandleWsRegistrar },
+
+    Input extends {} = {},
+    Output = {},
 > {
     protected readonly wsAPI: WebsocketConnection;
     protected handles: { [name: string]: WsLink<any, any> } = {};
@@ -30,10 +33,10 @@ export class WsLinker<
 
     constructor(
         wsAPI: WebsocketConnection,
-        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar<any> }
+        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar }
     ) {
         this.wsAPI = wsAPI;
-        this.registrars = this.buildRegistrars(registrars);
+        this.registrars = this.buildRegistrars(registrars) as any;
 
         // ------------------------------
         // TODO: hijack thats not pretty
@@ -47,7 +50,7 @@ export class WsLinker<
     ): H {
         const res = {} as H;
         for (const key in registrars) {
-            const f = registrars[key](this).register;
+            const f = registrars[key](this);
             // @ts-ignore
             res[key] = f;
         }
@@ -55,7 +58,7 @@ export class WsLinker<
     }
 
     // false, extract params
-    get register() {
+    get register(): { [key in keyof H]: H[key] } {
         return this.registrars;
     }
 
@@ -139,7 +142,7 @@ export class SimpleToArray<T> implements Converter<T, T[]> {
     }
 }
 
-export interface HandleWsRegistrar<S extends { name: string }> {
+export interface HandleWsRegistrar<S extends { name: string } = { name: string }> {
     register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
 }
 
@@ -184,6 +187,9 @@ class WsJsonEncoder<T extends {}> implements Converter<T, string> {
     }
 }
 
+/**
+ * deb only present for tests
+ */
 class JsonHandleRegistrar extends AbstractHandleWsRegistrar<{ name: string, deb: string }> {
     register<T extends {}, R extends {}>(props: { name: string, deb: string }): WsLink<T, R> {
         return new JsonWsLink<T, R>(this.wsLinker, props.name);
@@ -193,12 +199,17 @@ class JsonHandleRegistrar extends AbstractHandleWsRegistrar<{ name: string, deb:
 
 
 // TODO: rename
-const wsLinker = new WsLinker(getWs(), {
+const registrars: {
+    json: (linker: WsLinker<{}, {}>) => HandleWsRegistrar<{ name: string, deb: string }>
+} = {
     json: (linker: WsLinker<{}, {}>) => new JsonHandleRegistrar(linker),
-});
+};
+const wsLinker = new WsLinker<{
+    json: JsonHandleRegistrar,
+}>(getWs(), registrars);
 
 // TODO: add support for schema link
-export const newMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, RawSignal & { chatId: string }>({ name: 'newMessage' });
+export const newMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, RawSignal & { chatId: string }>({ name: 'newMessage', deb: 'es' });
 
 
 const l = new PostMultipartHttpLink<{ chatId: string, body: any }, (RawSignal & { chatId?: string })[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
