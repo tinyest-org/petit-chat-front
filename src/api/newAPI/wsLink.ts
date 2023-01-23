@@ -1,19 +1,50 @@
 import { RawSignal } from "../../store/signal/type";
 import { httpApi } from "../httpApi";
 import { WebsocketConnection } from "../ws/wsUtils";
-import { getWs, ws } from "../wsApi";
+import { getWs } from "../wsApi";
 import { PostMultipartHttpLink } from "./httpLink";
 import { AbstractLink, BridgeLink, Converter, Link, MultiLink } from "./link";
 
-export class WsLinker<T extends {}, R> {
-    protected readonly wsAPI: WebsocketConnection;
-    protected handles: { [name: string]: WsLink<any> } = {};
+type WsRegistrarHolder<T> = { [key in keyof T]: <E extends {}, R extends {}>(name: string) => WsLink<E, R> };
 
-    constructor(wsAPI: WebsocketConnection) {
+export class WsLinker<
+    U,
+    H extends WsRegistrarHolder<U>,
+    T extends {} = {},
+    R = {},
+> {
+    protected readonly wsAPI: WebsocketConnection;
+    protected handles: { [name: string]: WsLink<any, any> } = {};
+
+    protected readonly registrars: H;
+
+    constructor(
+        wsAPI: WebsocketConnection,
+        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar }
+    ) {
         this.wsAPI = wsAPI;
+        this.registrars = this.buildRegistrars(registrars);
+        // ------------------------------
         // Todo: hijack thats not pretty
         // should re implement everything here
         this.wsAPI.onMessage = this.internalOnMessage;
+    }
+
+
+    private buildRegistrars(
+        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar }
+    ): H {
+        const res = {} as H;
+        for (const key in registrars) {
+            const f = registrars[key](this).register;
+            // @ts-ignore
+            res[key] = f;
+        }
+        return res;
+    }
+
+    get register(): { [key in keyof H]: <E extends {}, R extends {}>(name: string) => WsLink<E, R> } {
+        return this.registrars;
     }
 
     available(): boolean {
@@ -25,9 +56,9 @@ export class WsLinker<T extends {}, R> {
         return undefined;
     }
 
-    registerHandle(name: string, handle: WsLink<any>) {
+    addHandle<T extends {}, R>(name: string, handle: WsLink<T, R>) {
         this.handles[name] = handle;
-
+        return handle;
     }
 
     private internalOnMessage = (evt: MessageEvent<string>) => {
@@ -38,13 +69,13 @@ export class WsLinker<T extends {}, R> {
             this.handles[subject].doOnMessage(content);
         }
     }
-
-    // implementer le "on" -> listen
-    // ajouter un router pour router les réponses
-    // récuperer le onMessagde de la co ws
-    // utiliser le decoder pour decoder la méthode et utiliser un router pour router les réponses
 }
 
+/**
+ * Encodes the query in order to send json query using  the 
+ * {method},{body} format -> makes it easier on the server side 
+ * to properly parse args and route the data
+ */
 class WsJsonEncoder<T extends {}> implements Converter<T, string> {
     method: string;
     constructor(method: string) {
@@ -66,19 +97,21 @@ class WsJsonDecoder<T extends {}> implements Converter<string, T> {
     }
 }
 
-interface WsLink<R> {
+interface WsLink<T extends {}, R> extends Link<T, R> {
+    query(t: T): Promise<undefined>;
     doOnMessage(r: R): Promise<void>;
 }
 
+
 // TODO: extract base functions to abstract class
 // like http handling
-export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R, any, any> implements WsLink<R> {
+export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R, any, any> implements WsLink<T, R> {
     public readonly method: string;
     protected encoder: Converter<T, any>;
     protected wsApi: WsLinker<any, any>;
 
-    constructor(wsApi: WsLinker<any, any>, method: string) {
-        super();
+    constructor(wsApi: WsLinker<any, any>, method: string, receiveOnly: boolean = false) {
+        super(receiveOnly);
         this.method = method;
         this.wsApi = wsApi;
         this.encoder = new WsJsonEncoder(this.method);
@@ -104,22 +137,52 @@ export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R, a
     }
 }
 
+export class SimpleToArray<T> implements Converter<T, T[]> {
+    async convert(t: T): Promise<T[]> {
+        return [t];
+    }
+}
+
+export interface HandleWsRegistrar {
+    register<T extends {}, R extends {}>(name: string): WsLink<T, R>;
+}
+
+export abstract class AbstractHandleWsRegistrar implements HandleWsRegistrar {
+    protected wsLinker: WsLinker<any, any>;
+
+    constructor(wsLinker: WsLinker<any, any>) {
+        this.wsLinker = wsLinker;
+    }
+
+    protected bind<T extends {}, R extends {}>(name: string): WsLink<T, R> {
+        const handle = this.register<T, R>(name);
+        this.wsLinker.addHandle(name, handle);
+        return handle;
+    }
+
+
+    abstract register<T extends {}, R extends {}>(name: string): WsLink<T, R>;
+}
+
+class JsonHandleRegistrar extends AbstractHandleWsRegistrar {
+    register<T extends {}, R extends {}>(name: string): WsLink<T, R> {
+        return new JsonWsLink<T, R>(this.wsLinker, name);
+    }
+}
+
+
 // TODO: rename
-const wsLinker = new WsLinker(getWs());
+const wsLinker = new WsLinker(getWs(), {
+    json: (linker: WsLinker<{}, {}>) => new JsonHandleRegistrar(linker),
+});
 
-// should change the way it's registered
-export const newMessageHandle = new JsonWsLink<{ chatId: string, body: any }, RawSignal & { chatId: string }>(wsLinker, "newMessage");
-// should change the way it's registered
-wsLinker.registerHandle("newMessage", newMessageHandle);
+// should be wsLinker.register.json<{ chatId: string, body: any }, RawSignal & { chatId: string }>('newMessage');
+export const newMessageHandle = wsLinker.register.json<{ chatId: string, body: any }, RawSignal & { chatId: string }>('newMessage');
 
-// const notificationHolder = new NotificationHolder(api, {
-//     'newMessage': new JsonHandle<RawSignal & { chatId: string }>(),
-// });
 
-// export default notificationHolder;
 const l = new PostMultipartHttpLink<{ chatId: string, body: any }, (RawSignal & { chatId?: string })[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
 
-const bridged = new BridgeLink(newMessageHandle, { convert: async s => [s] });
+const bridged = new BridgeLink(newMessageHandle, new SimpleToArray());
 
 export const newMessageHandleMulti = new MultiLink([bridged, l]);
 

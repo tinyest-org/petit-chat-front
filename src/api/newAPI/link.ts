@@ -27,6 +27,11 @@ export abstract class AbstractLink<
     protected abstract decoder: Converter<O, R>;
 
     protected handles: { [name: string]: (msg: R) => void } = {};
+    protected receiveOnly: boolean;
+
+    constructor(receiveOnly: boolean) {
+        this.receiveOnly = receiveOnly;
+    }
 
     onMessage(name: string, f: (msg: R) => void) {
         this.handles[name] = f;
