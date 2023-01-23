@@ -176,7 +176,7 @@ const wsLinker = new WsLinker(getWs(), {
     json: (linker: WsLinker<{}, {}>) => new JsonHandleRegistrar(linker),
 });
 
-// should be wsLinker.register.json<{ chatId: string, body: any }, RawSignal & { chatId: string }>('newMessage');
+// TODO: add support for schema link
 export const newMessageHandle = wsLinker.register.json<{ chatId: string, body: any }, RawSignal & { chatId: string }>('newMessage');
 
 
