@@ -15,11 +15,11 @@ export type Convertor<F, T> = (from: F) => T;
  * 
  */
 
-name => FunctionHandle {
-    name
-    encoder
-    decoder
-}
+// name => FunctionHandle {
+//     name
+//     encoder
+//     decoder
+// }
 
 
 

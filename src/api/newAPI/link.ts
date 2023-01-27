@@ -41,8 +41,12 @@ export abstract class AbstractLink<
 export class MultiLink<T extends {}, R> implements Link<T, R> {
     private subLinks: Link<T, R | undefined>[];
 
-    constructor(subLinks: Link<T, R | undefined>[]) {
+    protected constructor(subLinks: Link<T, R | undefined>[]) {
         this.subLinks = subLinks;
+    }
+
+    static of<T extends {}, R>(subLinks: Link<T, R | undefined>[]) {
+        return new MultiLink(subLinks);
     }
 
     available() {
@@ -97,3 +101,18 @@ export class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
         this.inputLink.onMessage(name, w);
     }
 }
+
+/**
+ * Makes usage of BridgeLink cleaner
+ */
+class Bridger {
+    from<T extends {}, R, FR>(inputLink: Link<T, R>) {
+        const b = (converter: Converter<R ,FR>) => {
+            return new BridgeLink(inputLink, converter);
+        }
+        return {using: b};
+    }
+}   
+
+
+export const bridge = new Bridger();

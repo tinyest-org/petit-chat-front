@@ -3,7 +3,7 @@ import { httpApi } from "../httpApi";
 import { WebsocketConnection } from "../ws/wsUtils";
 import { getWs } from "../wsApi";
 import { PostMultipartHttpLink } from "./httpLink";
-import { AbstractLink, BridgeLink, Converter, Link, MultiLink } from "./link";
+import { AbstractLink, bridge, BridgeLink, Converter, Link, MultiLink } from "./link";
 
 type ArrayElement<ArrayType extends readonly unknown[]> =
     ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
@@ -136,7 +136,7 @@ export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R, a
     }
 }
 
-export class SimpleToArray<T> implements Converter<T, T[]> {
+export class SimpleToArrayConverter<T> implements Converter<T, T[]> {
     async convert(t: T): Promise<T[]> {
         return [t];
     }
@@ -200,19 +200,20 @@ class JsonHandleRegistrar extends AbstractHandleWsRegistrar<{ name: string, deb:
 const registrars = {
     json: (linker: WsLinker<{}, {}>) => new JsonHandleRegistrar(linker),
 };
-const wsLinker = new WsLinker<{
-    json: JsonHandleRegistrar,
-}>(getWs(), registrars);
+
+const wsCon = getWs();
+
+const wsLinker = new WsLinker<{ json: JsonHandleRegistrar, }>(wsCon, registrars);
 
 // TODO: add support for schema link
 export const newMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, RawSignal & { chatId: string }>({ name: 'newMessage', deb: 'es' });
 
 
-const l = new PostMultipartHttpLink<{ chatId: string, body: any }, (RawSignal & { chatId?: string })[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
+const httpLink = new PostMultipartHttpLink<{ chatId: string, body: any }, (RawSignal & { chatId?: string })[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
 
-const bridged = new BridgeLink(newMessageHandle, new SimpleToArray());
+const bridgedWs = bridge.from(newMessageHandle).using(new SimpleToArrayConverter());
 
-export const newMessageHandleMulti = new MultiLink([bridged, l]);
+export const newMessageHandleMulti = MultiLink.of([bridgedWs, httpLink]);
 
 
 /**                     R        FR
