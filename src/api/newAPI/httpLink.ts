@@ -28,7 +28,7 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R, H
     abstract method: Method;
 
     constructor(api: HttpAPI, url: string, paramExtractor: ParamExtractor<T>) {
-        super();
+        super(false);
         this.api = api;
         this.url = url;
         this.paramExtractor = paramExtractor;

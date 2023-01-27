@@ -205,11 +205,13 @@ const wsCon = getWs();
 
 const wsLinker = new WsLinker<{ json: JsonHandleRegistrar, }>(wsCon, registrars);
 
+type DetailedSignal = RawSignal & { chatId: string };
+
 // TODO: add support for schema link
-export const newMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, RawSignal & { chatId: string }>({ name: 'newMessage', deb: 'es' });
+export const newMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, DetailedSignal>({ name: 'newMessage', deb: 'es' });
 
-
-const httpLink = new PostMultipartHttpLink<{ chatId: string, body: any }, (RawSignal & { chatId?: string })[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
+// TODO: add HttpLinker like wsLinker
+const httpLink = new PostMultipartHttpLink<{ chatId: string, body: any }, DetailedSignal[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
 
 const bridgedWs = bridge.from(newMessageHandle).using(new SimpleToArrayConverter());
 
