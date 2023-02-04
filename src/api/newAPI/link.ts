@@ -18,14 +18,9 @@ export interface Converter<T, R> {
 export abstract class AbstractLink<
     T extends {},
     R,
-    I,
-    O
 > implements Link<T, R> {
     abstract available(): boolean;
     abstract query(t: T): Promise<R | undefined>;
-    protected abstract encoder: Converter<T, I>;
-    protected abstract decoder: Converter<O, R>;
-
     protected handles: { [name: string]: (msg: R) => void } = {};
     protected receiveOnly: boolean;
 

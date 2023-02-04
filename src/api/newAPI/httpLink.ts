@@ -20,10 +20,13 @@ type HttpParams = {
     options?: FetchOptions,
 }
 
-export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R, HttpParams, Response> {
+export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
     protected readonly api: HttpAPI;
     public readonly url: string;
-
+    
+    protected abstract encoder: Converter<T, HttpParams>;
+    protected abstract decoder: Converter<Response, R>;
+    
     protected readonly paramExtractor: ParamExtractor<T>;
     abstract method: Method;
 

@@ -104,7 +104,7 @@ interface WsLink<T extends {}, R> extends Link<T, R> {
 
 // TODO: extract base functions to abstract class
 // like http handling
-export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R, any, any> implements WsLink<T, R> {
+export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R> implements WsLink<T, R> {
     public readonly method: string;
     protected encoder: Converter<T, any>;
     protected wsApi: WsLinker<any, any>;
