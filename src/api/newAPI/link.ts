@@ -72,9 +72,9 @@ export class MultiLink<T extends {}, R> implements Link<T, R> {
 // bridge link should be able to implement link, while taking as input as link and transforming it's output to implement another interface
 export class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
     private inputLink: Link<T, R>;
-    private converter: Converter<R ,FR>;
+    private converter: Converter<R, FR>;
 
-    constructor(inputLink: Link<T, R>, converter: Converter<R ,FR>) {
+    constructor(inputLink: Link<T, R>, converter: Converter<R, FR>) {
         this.inputLink = inputLink;
         this.converter = converter;
     }
@@ -89,7 +89,7 @@ export class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
     }
 
     onMessage(name: string, f: (msg: FR) => void): void {
-        const w = async(r: R)  => {
+        const w = async (r: R) => {
             const c = await this.converter.convert(r);
             f(c);
         }
@@ -101,13 +101,13 @@ export class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
  * Makes usage of BridgeLink cleaner
  */
 class Bridger {
-    from<T extends {}, R, FR>(inputLink: Link<T, R>) {
-        const b = (converter: Converter<R ,FR>) => {
+    from<T extends {}, R>(inputLink: Link<T, R>) {
+        const b = <FR>(converter: Converter<R, FR>) => {
             return new BridgeLink(inputLink, converter);
         }
-        return {using: b};
+        return { using: b };
     }
-}   
+}
 
 
 export const bridge = new Bridger();

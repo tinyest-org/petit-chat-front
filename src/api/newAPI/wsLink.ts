@@ -147,7 +147,7 @@ export interface HandleWsRegistrar<S extends { name: string } = { name: string }
 }
 
 // should add support for more settings
-export abstract class AbstractHandleWsRegistrar<S extends { name: string }> implements HandleWsRegistrar<S> {
+export abstract class AbstractWsHandleRegistrar<S extends { name: string }> implements HandleWsRegistrar<S> {
     protected wsLinker: WsLinker<any, any>;
 
     constructor(wsLinker: WsLinker<any, any>) {
@@ -190,7 +190,13 @@ class WsJsonEncoder<T extends {}> implements Converter<T, string> {
 /**
  * deb only present for tests
  */
-class JsonHandleRegistrar extends AbstractHandleWsRegistrar<{ name: string, deb: string }> {
+class JsonHandleRegistrar extends AbstractWsHandleRegistrar<{
+    name: string,
+    /**
+     * Only for tests with overide api
+     */
+    deb: string
+}> {
     register<T extends {}, R extends {}>(props: { name: string, deb: string }): WsLink<T, R> {
         return new JsonWsLink<T, R>(this.wsLinker, props.name);
     }
@@ -208,14 +214,17 @@ const wsLinker = new WsLinker<{ json: JsonHandleRegistrar, }>(wsCon, registrars)
 type DetailedSignal = RawSignal & { chatId: string };
 
 // TODO: add support for schema link
-export const newMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, DetailedSignal>({ name: 'newMessage', deb: 'es' });
+export const wsNewMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, DetailedSignal>({ name: 'newMessage', deb: 'es' });
 
 // TODO: add HttpLinker like wsLinker
 const httpLink = new PostMultipartHttpLink<{ chatId: string, body: any }, DetailedSignal[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
 
-const bridgedWs = bridge.from(newMessageHandle).using(new SimpleToArrayConverter());
-
-export const newMessageHandleMulti = MultiLink.of([bridgedWs, httpLink]);
+export const newMessageHandleMulti = MultiLink.of([
+    bridge
+        .from(wsNewMessageHandle)
+        .using(new SimpleToArrayConverter()),
+    httpLink
+]);
 
 
 /**                     R        FR
