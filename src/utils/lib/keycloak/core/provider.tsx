@@ -88,8 +88,9 @@ export function createAuthProvider<T extends AuthClient>(
     }
 
     return function KeycloakProvider(props: AuthProviderProps<T> & { children: JSX.Element }) {
-        const [initialized, setInitialized] = createSignal(false);
-        const [state, setState] = createSignal({ ...initialState, authClient: props.authClient, initialized });
+        // const [initialized, setInitialized] = createSignal(false);
+        // const [isAuthenticated, setAuthed] = createSignal(false);
+        const [state, setState] = createSignal({ ...initialState, authClient: props.authClient  });
         const { autoRefreshToken, authClient, onEvent, initOptions } = props;
         const value: IAuthContextProps<T> = [state, {}];
         const [authed, { set: setAuthed }] = useContext(AuthedContext)!;
@@ -168,14 +169,17 @@ export function createAuthProvider<T extends AuthClient>(
                 isAuthenticated !== prevAuthenticated ||
                 isLoading !== prevLoading
             ) {
-                setInitialized(true);
+
                 setState(old => ({
                     ...old,
-                    isAuthenticated,
                     isLoading,
+                    initialized: true, 
+                    isAuthenticated
                 }));
                 setAuthed(isAuthenticated);
                 setLogged(true);
+                // setInitialized(true);
+                // setAuthed(isAuthenticated);
                 console.log('is initialized');
             }
 

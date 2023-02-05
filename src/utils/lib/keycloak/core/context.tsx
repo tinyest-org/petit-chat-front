@@ -6,7 +6,7 @@ import { AuthClient } from './types';
  */
 export type IAuthContextProps<T extends AuthClient> = [Accessor<{
   authClient: T;
-  initialized: Accessor<boolean>;
+  initialized: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
 }>, {}]
