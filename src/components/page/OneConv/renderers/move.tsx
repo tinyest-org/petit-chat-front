@@ -14,7 +14,7 @@ export function ArrivalSignal(props: SignalProps) {
     const localUsers = parsed.map(e => users()[e]);
     return (
         <>
-            {localUsers.map(e => e.name).join(', ')} just arrived !
+            {localUsers.map(e => e?.name).join(', ')} just arrived !
         </>
     );
 }
@@ -26,7 +26,7 @@ export function LeftSignal(props: SignalProps) {
     const localUsers = parsed.map(e => users()[e]);
     return (
         <>
-            {localUsers.map(e => e.name).join(', ')} just left !
+            {localUsers.map(e => e?.name).join(', ')} just left !
         </>
     );
 }

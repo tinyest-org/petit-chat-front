@@ -5,6 +5,7 @@ import OneConv from "../../page/OneConv/OneConv"
 import SearchMessages from "../../page/OneConv/SearchMessages"
 import { UserProvider } from "../../../store/user/context"
 import { createTheme, CssBaseline, ThemeProvider } from "@suid/material"
+import LoginPage from "../../page/Login/Login"
 
 const theme = createTheme({
     palette: {

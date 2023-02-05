@@ -1,7 +1,7 @@
 import { useParams } from "@solidjs/router";
 import { Box } from "@suid/material";
 import { createEffect, createResource, createSignal, For, onCleanup, onMount } from "solid-js";
-import { getSignals, getUsersHttpLink, newMessageHandleMulti } from "../../../store/chat/action";
+import { getSignals, getUsersLink, newMessageHandleMulti } from "../../../store/chat/action";
 import { ID } from "../../../store/common/type";
 import { RawSignal } from "../../../store/signal/type";
 import { useUsers } from "../../../store/user/context";
@@ -50,14 +50,14 @@ export default function OneConv() {
     }
 
     createEffect(() => {
-        getUsersHttpLink.query({ chatId: chatId() });
+        getUsersLink.query({ chatId: chatId() });
     });
 
     onMount(() => {
         newMessageHandleMulti.onMessage('oneConv', s => {
             addSignal(s);
         });
-        getUsersHttpLink.onMessage('oneConv', users => {
+        getUsersLink.onMessage('oneConv', users => {
             users.forEach(add);
         });
     });

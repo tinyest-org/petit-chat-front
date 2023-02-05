@@ -197,10 +197,10 @@ class JsonHandleRegistrar extends AbstractWsHandleRegistrar<{
     /**
      * Only for tests with overide api
      */
-    deb: string
+    receiveOnly: boolean
 }> {
-    protected register<T extends {}, R extends {}>(props: { name: string, deb: string }): WsLink<T, R> {
-        return new JsonWsLink<T, R>(this.wsLinker, props.name);
+    protected register<T extends {}, R extends {}>(props: { name: string, receiveOnly: boolean }): WsLink<T, R> {
+        return new JsonWsLink<T, R>(this.wsLinker, props.name, props.receiveOnly);
     }
 }
 
