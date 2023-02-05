@@ -80,6 +80,7 @@ export class WsLinker<
         const { data } = evt;
         // TODO: should be first decoder here for the router -> extract the logic
         const { subject, content }: { content: string, subject: string } = JSON.parse(data);
+        console.log(subject, this.handles);
         if (subject) {
             this.handles[subject].doOnMessage(content);
         }
@@ -142,26 +143,27 @@ export class SimpleToArrayConverter<T> implements Converter<T, T[]> {
     }
 }
 
-export interface HandleWsRegistrar<S extends { name: string } = { name: string }> {
-    register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
+export abstract class HandleWsRegistrar<S extends { name: string } = { name: string }> {
+    protected abstract register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
 }
 
 // should add support for more settings
-export abstract class AbstractWsHandleRegistrar<S extends { name: string }> implements HandleWsRegistrar<S> {
+export abstract class AbstractWsHandleRegistrar<S extends { name: string }> extends HandleWsRegistrar<S> {
     protected wsLinker: WsLinker<any, any>;
 
     constructor(wsLinker: WsLinker<any, any>) {
+        super();
         this.wsLinker = wsLinker;
     }
 
-    protected bind<T extends {}, R extends {}>(props: S): WsLink<T, R> {
+    public readonly bind = <T extends {}, R extends {}>(props: S): WsLink<T, R> => {
         const handle = this.register<T, R>(props);
         this.wsLinker.addHandle(props.name, handle);
         return handle;
     }
 
 
-    abstract register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
+    protected abstract register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
 }
 
 /**
@@ -197,7 +199,7 @@ class JsonHandleRegistrar extends AbstractWsHandleRegistrar<{
      */
     deb: string
 }> {
-    register<T extends {}, R extends {}>(props: { name: string, deb: string }): WsLink<T, R> {
+    protected register<T extends {}, R extends {}>(props: { name: string, deb: string }): WsLink<T, R> {
         return new JsonWsLink<T, R>(this.wsLinker, props.name);
     }
 }
@@ -209,22 +211,7 @@ const registrars = {
 
 const wsCon = getWs();
 
-const wsLinker = new WsLinker<{ json: JsonHandleRegistrar, }>(wsCon, registrars);
-
-type DetailedSignal = RawSignal & { chatId: string };
-
-// TODO: add support for schema link
-export const wsNewMessageHandle = wsLinker.register.json.register<{ chatId: string, body: any }, DetailedSignal>({ name: 'newMessage', deb: 'es' });
-
-// TODO: add HttpLinker like wsLinker
-const httpLink = new PostMultipartHttpLink<{ chatId: string, body: any }, DetailedSignal[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
-
-export const newMessageHandleMulti = MultiLink.of([
-    bridge
-        .from(wsNewMessageHandle)
-        .using(new SimpleToArrayConverter()),
-    httpLink
-]);
+export const wsLinker = new WsLinker<{ json: JsonHandleRegistrar, }>(wsCon, registrars);
 
 
 /**                     R        FR

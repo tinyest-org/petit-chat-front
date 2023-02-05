@@ -25,7 +25,11 @@ export default function NewSignal(props: Props) {
         setText('');
     }
 
-    // TODO: catch enter press to send the message
+    const listener = (ev: KeyboardEvent) => {
+        if (ev.key === "Enter") {
+            newMessage();
+        }
+    };
 
     return (
         <div
@@ -37,6 +41,7 @@ export default function NewSignal(props: Props) {
             <TextField
                 // TODO: multiline
                 value={textContent()}
+                onKeyDown={listener}
                 onChange={e => setText(e.target.value)}
             />
             <Button onClick={newMessage} >

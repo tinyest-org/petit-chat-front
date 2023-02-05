@@ -4,15 +4,17 @@ import { api } from "../../../api/api";
 import { getWs } from "../../../api/wsApi";
 import SearchBar from "../SearchBar/SearchBar";
 import ConvBar from "../../page/ConvBar/ConvBar";
+import LeftBar from "./LeftBar";
+import MainContent from "./mainContent";
+import RightBar from "./RightBar";
 
 type Props = {
     children: JSX.Element;
 }
 
 export default function Layout(props: Props) {
-    const c = children(() => props.children);
 
-    onMount(()=>{
+    onMount(() => {
         api.mountNotifications().then(() => console.log('ws open'));
     })
 
@@ -32,14 +34,11 @@ export default function Layout(props: Props) {
                     width: '100%',
                 }}
             >
-                <ConvBar />
-                <div
-                    style={{
-                        width: '100%'
-                    }}
-                >
-                    {c()}
-                </div>
+                <LeftBar />
+                <MainContent>
+                    {props.children}
+                </MainContent>
+                <RightBar />
             </div>
         </div>
     );

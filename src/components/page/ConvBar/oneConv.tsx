@@ -1,9 +1,7 @@
 import { A } from "@solidjs/router";
-import { ListItem, ListItemText } from "@suid/material";
+import { Link, ListItem, ListItemText, Typography } from "@suid/material";
 import { createSignal, onMount, Show } from "solid-js";
-import { api } from "../../../api/api";
-import { newMessageHandleMulti } from "../../../api/newAPI/wsLink";
-// import notificationHolder from "../../../api/notification";
+import { newMessageHandleMulti } from "../../../store/chat/action";
 import { Chat } from "../../../store/chat/type";
 
 
@@ -28,19 +26,19 @@ export default function OneConv(props: Props) {
     })
 
     return ( // todo: add link
-        <A href={`/chat/${props.chat.id}`}>
+        <Link href={`/chat/${props.chat.id}`} component={A} underline="none">
             <ListItem>
                 <ListItemText>
                     {props.chat.name}
                 </ListItemText>
             </ListItem>
             <Show when={lastMessage()}>
-                <ListItem>
+                <Typography variant="subtitle2" >
                     <ListItemText>
                         {lastMessage()}
                     </ListItemText>
-                </ListItem>
+                </Typography>
             </Show>
-        </A>
+        </Link>
     )
 }
