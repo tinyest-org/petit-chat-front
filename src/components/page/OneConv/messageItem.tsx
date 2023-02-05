@@ -74,7 +74,7 @@ export default function OneMessage(props: Props & { isFirst: boolean; }) {
                                 fontWeight: 900,
                             }}
                         >
-                            {props.signal.userId ? users()[props.signal.userId].name : "Concord"}
+                            {props.signal.userId ? users()[props.signal.userId]?.name : "Concord"}
                         </Typography>
                         &nbsp;&nbsp;
                         <DateItem date={props.signal.createdAt} />

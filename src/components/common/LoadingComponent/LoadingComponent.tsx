@@ -4,7 +4,7 @@ import { children, JSX, Show } from "solid-js";
 
 type Props = {
     loading: boolean;
-    children: JSX.Element;
+    children?: JSX.Element;
 }
 
 

@@ -1,4 +1,4 @@
-import keycloak from "../keycloak";
+import keycloak, { getKeycloak } from "../keycloak";
 import { HttpAPI, HTTPRequestError } from "./http/apiUtils";
 import SimpleCache, { LocalStoreObjectDataStore } from "./http/utils/cacheUtils";
 import { KeycloakSecurityProvider, NoopSecurityProvider } from "./http/securityUtils";
@@ -20,7 +20,7 @@ const bodyPreparator = new QueryBodyPreparator();
 const cacheDatastore = new LocalStoreObjectDataStore(cacheKey);
 const cache = new SimpleCache(cacheDatastore);
 
-const securityProvider = new NoopSecurityProvider();
+const securityProvider = new KeycloakSecurityProvider(keycloak);
 
 export const httpApi = new HttpAPI(apiUrl, securityProvider, cache, bodyPreparator);
 

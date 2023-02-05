@@ -1,34 +1,34 @@
 {
-  "name": "concord-front",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "build": "vite build",
-    "start": "vite"
-  },
-  "dependencies": {
-    "@absolid/solid-keycloak": "^0.1.1",
-    "@solidjs/router": "^0.6.0",
-    "@suid/icons-material": "^0.5.5",
-    "@suid/material": "^0.9.1",
-    "keycloak-js": "^20.0.2",
-    "protobufjs": "^7.2.1",
-    "solid-js": "^1.6.7"
-  },
-  "devDependencies": {
-    "@suid/vite-plugin": "^0.1.2",
-    "@types/node": "^18.11.18",
-    "@typescript-eslint/eslint-plugin": "^5.43.0",
-    "@typescript-eslint/parser": "^5.43.0",
-    "eslint": "^8.28.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-airbnb-typescript": "^17.0.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-solid": "^0.8.0",
-    "prettier": "^2.7.1",
-    "typescript": "^4.8.2",
-    "vite": "^4.0.4",
-    "vite-plugin-solid": "2.5.0"
-  }
+    "name": "concord-front",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "build": "vite build",
+        "start": "vite"
+    },
+    "dependencies": {
+        "@solid-primitives/context": "^0.1.3",
+        "@solidjs/router": "^0.6.0",
+        "@suid/icons-material": "^0.5.5",
+        "@suid/material": "^0.9.1",
+        "keycloak-js": "^20.0.2",
+        "protobufjs": "^7.2.1",
+        "solid-js": "^1.6.7"
+    },
+    "devDependencies": {
+        "@suid/vite-plugin": "^0.1.2",
+        "@types/node": "^18.11.18",
+        "@typescript-eslint/eslint-plugin": "^5.43.0",
+        "@typescript-eslint/parser": "^5.43.0",
+        "eslint": "^8.28.0",
+        "eslint-config-airbnb-base": "^15.0.0",
+        "eslint-config-airbnb-typescript": "^17.0.0",
+        "eslint-config-prettier": "^8.5.0",
+        "eslint-plugin-prettier": "^4.2.1",
+        "eslint-plugin-solid": "^0.8.0",
+        "prettier": "^2.7.1",
+        "typescript": "^4.8.2",
+        "vite": "^4.0.4",
+        "vite-plugin-solid": "2.5.0"
+    }
 }

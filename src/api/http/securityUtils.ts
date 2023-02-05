@@ -41,7 +41,8 @@ export class KeycloakSecurityProvider implements SecurityProvider {
   constructor(private readonly keycloak: Keycloak) { }
 
   login(): void {
-    this.keycloak.login();
+    // this.keycloak.login();
+    console.log('is auth', this.keycloak.authenticated);
   }
 
   refresh(): Promise<boolean> {
@@ -49,6 +50,7 @@ export class KeycloakSecurityProvider implements SecurityProvider {
   }
 
   getToken(): string {
+    console.log('is auth', this.keycloak.authenticated);
     return this.keycloak.token || "";
   }
 
@@ -63,7 +65,6 @@ export class KeycloakSecurityProvider implements SecurityProvider {
       this.login();
       return true;
     }
-
   }
 
   async prepareHeaders(headers: Headers) {
