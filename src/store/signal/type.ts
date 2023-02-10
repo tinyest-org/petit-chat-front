@@ -1,15 +1,5 @@
 import { ID } from "../common/type"
 
-
-
-export type RawSignal = {
-    uuid: ID;
-    createdAt: ID;
-    content: string;
-    type: keyof typeof mapping;
-    userId: ID;
-}
-
 export enum SignalType {
     TEXT = 0,
     FILE = 1,
@@ -26,6 +16,20 @@ const mapping = {
     3: SignalType.ARRIVAL,
     4: SignalType.LEFT,
     5: SignalType.IMAGE,
+}
+
+type Reaction = {
+    value: string;
+    userId: ID;
+}
+
+export type RawSignal = {
+    uuid: ID;
+    createdAt: ID;
+    content: string;
+    type: keyof typeof mapping;
+    userId: ID;
+    reactions: Reaction[];
 }
 
 export function mapSignalType(type: keyof typeof mapping): SignalType {

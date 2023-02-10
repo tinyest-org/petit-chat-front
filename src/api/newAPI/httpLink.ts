@@ -12,9 +12,17 @@ const format = (string: string, args: { [k: string]: any }) => {
 };
 
 
+function isString(x: unknown): x is string {
+    return typeof x === "string";
+}
+
+function isFile(x: unknown): x is File {
+    return x instanceof File;
+}
+
 type HttpParams = {
     query?: { [key: string]: any },
-    path?: { [key: string]: any },
+    path?: { [key: string]: string | number },
     body?: any,
     headers?: { [key: string]: string },
     options?: FetchOptions,
@@ -23,12 +31,12 @@ type HttpParams = {
 export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
     protected readonly api: HttpAPI;
     public readonly url: string;
-    
+
     protected abstract encoder: Converter<T, HttpParams>;
-    protected abstract decoder: Converter<Response, R>;
-    
+    protected abstract decoder: Converter<{ response: Response, query: T }, R>;
+
     protected readonly paramExtractor: ParamExtractor<T>;
-    abstract method: Method;
+    readonly abstract method: Method;
 
     constructor(api: HttpAPI, url: string, paramExtractor: ParamExtractor<T>) {
         super(false);
@@ -56,7 +64,7 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
         const headers = new Headers();
         await this.api.securityProvider.prepareHeaders(headers);
         const preparedPath = this.formatUrl({ path, query });
-        
+
         // should have a cache handler doing this instead
         if (options?.cache) {
             const cached = await this.api.cache.getItem(preparedPath);
@@ -89,20 +97,23 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
                 throw new HTTPRequestError(res.status, "Unknown error");
             }
         }
-        const finalReponse = await this.decoder.convert(res);
+        const finalReponse = await this.decoder.convert({ response: res, query: t });
         // move to base class ?
         Object.keys(this.handles).forEach(k => {
             this.handles[k](finalReponse);
-        })
+        });
         return finalReponse;
     }
 }
 
-class JsonDecoder<R> implements Converter<Response, R> {
-    async convert(response: Response): Promise<R> {
+class JsonDecoder<R, Q = any> implements Converter<{ response: Response, query: any }, R> {
+    async convert({ response }: { response: Response, query: Q }): Promise<R> {
         const text = await response.text();
         // handle empty case
-        if (response.headers.get("content-length") === "0" || response.status === 204 || text.length == 0) {
+        if (response.headers.get("content-length") === "0"
+            || response.status === 204
+            || text.length == 0
+        ) {
             return null as unknown as R;
         }
         return JSON.parse(text);
@@ -143,7 +154,7 @@ class MultipartQueryEncoder<T> implements Converter<T, HttpParams> {
         // TODO: finish handle files
         Object.keys(body).forEach(k => {
             const v = body[k];
-            if (typeof v === "string") {
+            if (isFile(v) || isString(v)) {
                 form.append(k, v);
             }
         });
@@ -155,6 +166,30 @@ abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> 
     protected decoder = new JsonDecoder<R>(); // could be added in constructor too
     protected encoder = new JsonQueryEncoder<T>(this.paramExtractor);
 }
+
+export function createConverter<T extends {}, R>(convert: (t: T) => Promise<R>): Converter<T, R> {
+    return { convert };
+}
+
+export function createHttpConverter<Q extends {}, T extends { response: Response, query: Q }, R>(convert: (t: T) => Promise<R>): Converter<T, R> {
+    return { convert };
+}
+
+export abstract class BooleanHttpLink<T extends {}> extends BaseHttpLink<T, { query: T, success: boolean }> {
+    protected decoder = createHttpConverter<T, { query: T, response: Response }, { query: T, success: boolean }>(async ({ query }) => {
+        return { query, success: true };
+    });
+    protected encoder = new JsonQueryEncoder<T>(this.paramExtractor);
+}
+
+export class PostBooleanHttpLink<T extends {}> extends BooleanHttpLink<T> {
+    method: Method = "POST";
+}
+
+export class PutBooleanHttpLink<T extends {}> extends BooleanHttpLink<T> {
+    method: Method = "PUT";
+}
+
 
 abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
     protected decoder = new JsonDecoder<R>(); // could be added in constructor too
@@ -184,8 +219,3 @@ export class DeleteJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T,
     method: Method = "DELETE";
 }
 
-// example
-// const httpGetChat = makeGet<{ chatId: ID }, RawSignal[]>('/chat/{chatId}/signals', ({ chatId }) => ({ path: { chatId } }));
-// const wsGetChat: Link<{ chatId: ID }, undefined> = null as any;
-// // will use ws first and then fallback to http if not available
-// export const getChat = new MultiLink([wsGetChat, httpGetChat]);

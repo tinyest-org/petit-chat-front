@@ -100,7 +100,7 @@ export default function OneConv() {
                 <LoadingComponent loading={data.loading}>
                     {isEnd() && "Vous êtes arrivé au bout du fil"}
                     <For each={data()}>
-                        {e => <OneMessage signal={e} isFirst={e.isFirst} />}
+                        {e => <OneMessage chatId={chatId()} signal={e} isFirst={e.isFirst} />}
                     </For>
                 </LoadingComponent>
             </Box>

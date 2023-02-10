@@ -1,12 +1,14 @@
-import { Box, Card, CardContent, IconButton, ListItem, ListItemAvatar, ListItemSecondaryAction, ListItemText, Typography } from "@suid/material";
-import { Match, onMount, Show, Switch } from "solid-js";
+import MoreVertIcon from '@suid/icons-material/MoreVert';
+import { Box, IconButton, ListItem, ListItemAvatar, ListItemSecondaryAction, Typography } from "@suid/material";
+import { For, Match, onMount, Show, Switch } from "solid-js";
+import { ID } from '../../../store/common/type';
+import { removeReaction } from '../../../store/signal/action';
 import { mapSignalType, RawSignal } from "../../../store/signal/type";
 import { useUsers } from "../../../store/user/context";
 import ChatAvatar from "../../common/Avatar/Avatar";
 import Button from "../../common/Button/Button";
 import DateItem from "../../common/Date/DateItem";
 import { renderers } from "./renderers/renderers";
-import MoreVertIcon from '@suid/icons-material/MoreVert';
 
 export type ExtendedSignal =
     RawSignal & {
@@ -17,14 +19,41 @@ export type ExtendedSignal =
 
 type Props = {
     signal: ExtendedSignal;
-
 }
 
 export type SignalProps = Props & {
 
 }
 
-export default function OneMessage(props: Props & { isFirst: boolean; }) {
+
+function ReactionToggle(props: { reaction: string, signalId: ID, chatId: ID }) {
+
+    const remove = () => {
+        removeReaction.query({ chatId: props.chatId, signalId: props.signalId, value: props.reaction });
+    }
+
+    return (
+        <>
+            <Button onClick={remove} >
+                {props.reaction}
+            </Button>
+        </>
+    );
+}
+
+function ReactionComponent(props: Props & {chatId: ID}) {
+
+    return (
+        <Box>
+            <For each={props.signal.reactions} >
+                {(r) => <ReactionToggle chatId={props.chatId} signalId={props.signal.uuid} reaction={r.value} />}
+            </For>
+        </Box>
+    );
+}
+
+
+export default function OneMessage(props: Props & { isFirst: boolean; chatId: ID }) {
     // if isSelf align on the right else align on the left
     const Renderer = renderers[mapSignalType(props.signal.type)];
     let ref: any;
@@ -32,6 +61,11 @@ export default function OneMessage(props: Props & { isFirst: boolean; }) {
         if (props.signal.scroll) {
             ref.scrollIntoView();
         }
+
+        removeReaction.onMessage(`${props.signal.uuid}`, () => {
+            
+        });
+
     })
     const hasThread = false;
 
@@ -74,6 +108,7 @@ export default function OneMessage(props: Props & { isFirst: boolean; }) {
                                 fontWeight: 900,
                             }}
                         >
+                            {/* TODO: fix reactive */}
                             {props.signal.userId ? users()[props.signal.userId]?.name : "Concord"}
                         </Typography>
                         &nbsp;&nbsp;
@@ -92,6 +127,7 @@ export default function OneMessage(props: Props & { isFirst: boolean; }) {
                     <Button variant="text" >
                         Thread
                     </Button>)}
+                <ReactionComponent chatId={props.chatId} signal={props.signal} />
             </Box>
         </ListItem>
     )
