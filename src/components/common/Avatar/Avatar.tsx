@@ -33,7 +33,7 @@ function useProfilePicture(userId: ID) {
 }
 
 export function useUser() {
-    return "43c0db5c-d829-4929-8efc-5e4a13bb202f" as ID;
+    return "1d7d2f85-1ef1-4e7b-994b-ebf24cac2b99" as ID;
 }
 
 

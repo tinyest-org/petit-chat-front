@@ -45,17 +45,19 @@ function ReactionToggle(props: { reaction: string, signalId: ID, chatId: ID }) {
 function ReactionComponent(props: Props & { chatId: ID }) {
     const [reactions, setReactions] = createSignal<Reaction[]>(props.signal.reactions || []);
     const userId = useUser();
+    const handlesName = `${props.signal.uuid}`;
 
     onMount(() => {
-        removeReaction.onMessage(`${props.signal.uuid}`, ({ query, success }) => {
+        removeReaction.onMessage(handlesName, ({ query, success }) => {
+            // has bug
             if (success) {
                 if (query.signalId === props.signal.uuid) {
-                    setReactions(old => old.filter(e => e.userId === query.userId && e.value === query.value));
+                    setReactions(old => old.filter(e => !(e.userId === query.userId && e.value === query.value)));
                 }
             }
         });
 
-        addReaction.onMessage(`${props.signal.uuid}`, ({ query, success }) => {
+        addReaction.onMessage(handlesName, ({ query, success }) => {
             if (success) {
                 if (query.signalId === props.signal.uuid) {
                     setReactions(old => [...old, { value: query.value, userId: query.userId }]);
@@ -65,8 +67,8 @@ function ReactionComponent(props: Props & { chatId: ID }) {
     });
 
     onCleanup(() => {
-        addReaction.removeHandle(`${props.signal.uuid}`);
-        removeReaction.removeHandle(`${props.signal.uuid}`);
+        addReaction.removeHandle(handlesName);
+        removeReaction.removeHandle(handlesName);
     });
 
     return (
