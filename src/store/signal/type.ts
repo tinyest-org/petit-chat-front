@@ -18,14 +18,14 @@ const mapping = {
     5: SignalType.IMAGE,
 }
 
-type Reaction = {
+export type Reaction = {
     value: string;
     userId: ID;
 }
 
 export type RawSignal = {
     uuid: ID;
-    createdAt: ID;
+    createdAt: ID | string;
     content: string;
     type: keyof typeof mapping;
     userId: ID;

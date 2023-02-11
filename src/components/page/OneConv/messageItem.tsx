@@ -1,14 +1,15 @@
 import MoreVertIcon from '@suid/icons-material/MoreVert';
 import { Box, IconButton, ListItem, ListItemAvatar, ListItemSecondaryAction, Typography } from "@suid/material";
-import { For, Match, onMount, Show, Switch } from "solid-js";
+import { createSignal, For, Match, onMount, Show, Switch } from "solid-js";
 import { ID } from '../../../store/common/type';
-import { removeReaction } from '../../../store/signal/action';
-import { mapSignalType, RawSignal } from "../../../store/signal/type";
+import { addReaction, removeReaction } from '../../../store/signal/action';
+import { mapSignalType, RawSignal, Reaction } from "../../../store/signal/type";
 import { useUsers } from "../../../store/user/context";
-import ChatAvatar from "../../common/Avatar/Avatar";
+import ChatAvatar, { useUser } from "../../common/Avatar/Avatar";
 import Button from "../../common/Button/Button";
 import DateItem from "../../common/Date/DateItem";
 import { renderers } from "./renderers/renderers";
+import FavoriteIcon from '@suid/icons-material/Favorite';
 
 export type ExtendedSignal =
     RawSignal & {
@@ -27,9 +28,9 @@ export type SignalProps = Props & {
 
 
 function ReactionToggle(props: { reaction: string, signalId: ID, chatId: ID }) {
-
+    const userId = useUser();
     const remove = () => {
-        removeReaction.query({ chatId: props.chatId, signalId: props.signalId, value: props.reaction });
+        removeReaction.query({ chatId: props.chatId, signalId: props.signalId, value: props.reaction, userId });
     }
 
     return (
@@ -41,13 +42,40 @@ function ReactionToggle(props: { reaction: string, signalId: ID, chatId: ID }) {
     );
 }
 
-function ReactionComponent(props: Props & {chatId: ID}) {
+function ReactionComponent(props: Props & { chatId: ID }) {
+    const [reactions, setReactions] = createSignal<Reaction[]>(props.signal.reactions || []);
+    const userId = useUser();
+
+    onMount(() => {
+        removeReaction.onMessage(`${props.signal.uuid}`, ({ query, success }) => {
+            if (success) {
+                if (query.signalId === props.signal.uuid) {
+                    setReactions(old => old.filter(e => e.userId === query.userId && e.value === query.value));
+                }
+            }
+        });
+
+        addReaction.onMessage(`${props.signal.uuid}`, ({ query, success }) => {
+            if (success) {
+                if (query.signalId === props.signal.uuid) {
+                    setReactions(old => [...old, { value: query.value, userId: query.userId }]);
+                }
+            }
+        });
+    });
 
     return (
         <Box>
-            <For each={props.signal.reactions} >
+            <For each={reactions()} >
                 {(r) => <ReactionToggle chatId={props.chatId} signalId={props.signal.uuid} reaction={r.value} />}
             </For>
+            <Button onClick={() => {
+                addReaction.query({
+                    chatId: props.chatId, signalId: props.signal.uuid, value: 'like', userId
+                });
+            }} >
+                <FavoriteIcon />
+            </Button>
         </Box>
     );
 }
@@ -61,11 +89,6 @@ export default function OneMessage(props: Props & { isFirst: boolean; chatId: ID
         if (props.signal.scroll) {
             ref.scrollIntoView();
         }
-
-        removeReaction.onMessage(`${props.signal.uuid}`, () => {
-            
-        });
-
     })
     const hasThread = false;
 

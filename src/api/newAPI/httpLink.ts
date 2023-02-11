@@ -194,6 +194,10 @@ export class PutBooleanHttpLink<T extends {}> extends BooleanHttpLink<T> {
     method: Method = "PUT";
 }
 
+export class DeleteBooleanHttpLink<T extends {}> extends BooleanHttpLink<T> {
+    method: Method = "DELETE";
+}
+
 
 abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
     protected decoder = new JsonDecoder<R>(); // could be added in constructor too

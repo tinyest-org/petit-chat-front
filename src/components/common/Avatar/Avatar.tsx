@@ -32,6 +32,10 @@ function useProfilePicture(userId: ID) {
     return url;
 }
 
+export function useUser() {
+    return "43c0db5c-d829-4929-8efc-5e4a13bb202f" as ID;
+}
+
 
 export default function ChatAvatar(props: Props) {
     const url = useProfilePicture(props.userId);
