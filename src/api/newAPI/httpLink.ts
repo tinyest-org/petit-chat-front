@@ -30,13 +30,13 @@ type HttpParams = {
 
 export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
     protected readonly api: HttpAPI;
-    public readonly url: string;
+    protected readonly url: string;
 
     protected abstract encoder: Converter<T, HttpParams>;
     protected abstract decoder: Converter<{ response: Response, query: T }, R>;
 
     protected readonly paramExtractor: ParamExtractor<T>;
-    readonly abstract method: Method;
+    protected readonly abstract method: Method;
 
     constructor(api: HttpAPI, url: string, paramExtractor: ParamExtractor<T>) {
         super(false);
@@ -187,15 +187,15 @@ export abstract class BooleanHttpLink<T extends {}> extends BaseHttpLink<T, { qu
 }
 
 export class PostBooleanHttpLink<T extends {}> extends BooleanHttpLink<T> {
-    method: Method = "POST";
+    protected method: Method = "POST";
 }
 
 export class PutBooleanHttpLink<T extends {}> extends BooleanHttpLink<T> {
-    method: Method = "PUT";
+    protected method: Method = "PUT";
 }
 
 export class DeleteBooleanHttpLink<T extends {}> extends BooleanHttpLink<T> {
-    method: Method = "DELETE";
+    protected method: Method = "DELETE";
 }
 
 
@@ -207,23 +207,23 @@ abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLi
 // those are json links -> should make it clear
 // TODO: add support for protobuf link
 export class GetJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
-    method: Method = "GET";
+    protected method: Method = "GET";
 }
 
 export class PostJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
-    method: Method = "POST";
+    protected method: Method = "POST";
 }
 export class PostMultipartHttpLink<T extends {}, R> extends JsonResponseMultiPartHttpLink<T, R> {
-    method: Method = "POST";
+    protected method: Method = "POST";
 }
 
 export class PutJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
-    method: Method = "PUT";
+    protected method: Method = "PUT";
 }
 export class PatchJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
-    method: Method = "PATCH";
+    protected method: Method = "PATCH";
 }
 export class DeleteJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
-    method: Method = "DELETE";
+    protected method: Method = "DELETE";
 }
 

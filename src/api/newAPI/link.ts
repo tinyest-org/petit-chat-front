@@ -3,6 +3,7 @@ export interface Link<T extends {}, R> {
     available(): boolean;
     query(t: T): Promise<R | undefined>;
     onMessage(name: string, f: (msg: R) => void): void;
+    removeHandle(name: string): void;
 }
 
 export interface Converter<T, R> {
@@ -30,6 +31,10 @@ export abstract class AbstractLink<
 
     onMessage(name: string, f: (msg: R) => void) {
         this.handles[name] = f;
+    }
+
+    removeHandle(name: string) {
+        delete this.handles[name];
     }
 }
 
@@ -64,6 +69,13 @@ export class MultiLink<T extends {}, R> implements Link<T, R> {
             s.onMessage(name, f);
         });
     }
+
+    removeHandle(name: string): void {
+        this.subLinks.forEach(s => {
+            s.removeHandle(name);
+        });
+    }
+
 }
 
 
@@ -94,6 +106,10 @@ export class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
             f(c);
         }
         this.inputLink.onMessage(name, w);
+    }
+
+    removeHandle(name: string): void {
+        this.inputLink.removeHandle(name);
     }
 }
 

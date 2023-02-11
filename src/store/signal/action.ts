@@ -27,11 +27,8 @@ const signalReactionUrl = "/chat/{chatId}/{signalId}/reaction/{value}";
 export const addReaction = new PutBooleanHttpLink<{ chatId: ID, signalId: ID, value: string, userId: ID }>(
     httpApi, signalReactionUrl, ({ chatId, signalId, value }) => ({ path: { chatId, signalId, value } })
 );
+
 // TODO: make clean http implem
-// TODO: finish implem
-// addReaction.onMessage('e', ({ query, success }) => {
-//     // filter by query id
-// });
 
 export const removeReaction = new DeleteBooleanHttpLink<{ chatId: ID, signalId: ID, value: string, userId: ID }>(
     httpApi, signalReactionUrl, ({ chatId, signalId, value }) => ({ path: { chatId, signalId, value } })

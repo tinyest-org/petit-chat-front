@@ -1,6 +1,6 @@
 import MoreVertIcon from '@suid/icons-material/MoreVert';
 import { Box, IconButton, ListItem, ListItemAvatar, ListItemSecondaryAction, Typography } from "@suid/material";
-import { createSignal, For, Match, onMount, Show, Switch } from "solid-js";
+import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import { ID } from '../../../store/common/type';
 import { addReaction, removeReaction } from '../../../store/signal/action';
 import { mapSignalType, RawSignal, Reaction } from "../../../store/signal/type";
@@ -62,6 +62,11 @@ function ReactionComponent(props: Props & { chatId: ID }) {
                 }
             }
         });
+    });
+
+    onCleanup(() => {
+        addReaction.removeHandle(`${props.signal.uuid}`);
+        removeReaction.removeHandle(`${props.signal.uuid}`);
     });
 
     return (
