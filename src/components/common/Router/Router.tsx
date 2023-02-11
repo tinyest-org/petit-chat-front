@@ -1,17 +1,12 @@
-import { Routes, Route } from "@solidjs/router"
-import Layout from "../Layout/Layout"
+import { Route, Routes } from "@solidjs/router"
+import { CssBaseline, ThemeProvider } from "@suid/material"
+import { UserProvider } from "../../../store/user/context"
+import { theme } from "../../../theme"
 import NewConv from "../../page/NewConv/NewConv"
 import OneConv from "../../page/OneConv/OneConv"
 import SearchMessages from "../../page/OneConv/SearchMessages"
-import { UserProvider } from "../../../store/user/context"
-import { createTheme, CssBaseline, ThemeProvider } from "@suid/material"
-import LoginPage from "../../page/Login/Login"
+import Layout from "../Layout/Layout"
 
-const theme = createTheme({
-    palette: {
-        mode: 'dark',
-    }
-});
 
 export default function Router() {
 

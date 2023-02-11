@@ -1,6 +1,6 @@
 import MoreVertIcon from '@suid/icons-material/MoreVert';
-import { Box, IconButton, ListItem, ListItemAvatar, ListItemSecondaryAction, Typography } from "@suid/material";
-import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { Box, Icon, IconButton, ListItem, ListItemAvatar, ListItemSecondaryAction, Typography } from "@suid/material";
+import { createEffect, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import { ID } from '../../../store/common/type';
 import { addReaction, removeReaction } from '../../../store/signal/action';
 import { mapSignalType, RawSignal, Reaction } from "../../../store/signal/type";
@@ -29,15 +29,18 @@ export type SignalProps = Props & {
 
 function ReactionToggle(props: { reaction: string, signalId: ID, chatId: ID }) {
     const userId = useUser();
+
     const remove = () => {
         removeReaction.query({ chatId: props.chatId, signalId: props.signalId, value: props.reaction, userId });
     }
 
     return (
         <>
-            <Button onClick={remove} >
-                {props.reaction}
-            </Button>
+            <IconButton size='small' onClick={remove} >
+                <Icon>
+                    {props.reaction}
+                </Icon>
+            </IconButton>
         </>
     );
 }
@@ -78,7 +81,7 @@ function ReactionComponent(props: Props & { chatId: ID }) {
             </For>
             <Button onClick={() => {
                 addReaction.query({
-                    chatId: props.chatId, signalId: props.signal.uuid, value: 'like', userId
+                    chatId: props.chatId, signalId: props.signal.uuid, value: 'favorite', userId
                 });
             }} >
                 <FavoriteIcon />
@@ -98,67 +101,73 @@ export default function OneMessage(props: Props & { isFirst: boolean; chatId: ID
         }
     })
     const hasThread = false;
+    const [hovered, setHovered] = createSignal(false);
 
     const [users,] = useUsers();
 
     return (
-        <ListItem
-
-            sx={{
-                width: '100%',
-                alignItems: 'flex-start',
-            }}
-
+        <div
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
         >
-            <ListItemAvatar>
-                <Switch>
-                    <Match when={props.isFirst}>
-                        <ChatAvatar userId={props.signal.userId} />
-                    </Match>
-                    <Match when={!props.isFirst}>
-                        <DateItem hourOnly date={props.signal.createdAt} />
-                    </Match>
-                </Switch>
-            </ListItemAvatar>
-            <Box
+            <ListItem
                 sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
+                    width: '100%',
+                    alignItems: 'flex-start',
                 }}
-                ref={ref}
             >
-                <Show when={props.isFirst}>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                        }}
-                    >
-                        <Typography
+                <ListItemAvatar>
+                    <Switch>
+                        <Match when={props.isFirst}>
+                            <ChatAvatar userId={props.signal.userId} />
+                        </Match>
+                        <Match when={!props.isFirst}>
+                            <DateItem hourOnly date={props.signal.createdAt} />
+                        </Match>
+                    </Switch>
+                </ListItemAvatar>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}
+                    ref={ref}
+                >
+                    <Show when={props.isFirst}>
+                        <Box
+
                             sx={{
-                                fontWeight: 900,
+                                display: 'flex',
                             }}
                         >
-                            {/* TODO: fix reactive */}
-                            {props.signal.userId ? users()[props.signal.userId]?.name : "Concord"}
-                        </Typography>
-                        &nbsp;&nbsp;
-                        <DateItem date={props.signal.createdAt} />
-                    </Box>
-                </Show>
-                <Renderer signal={props.signal} />
-                <ListItemSecondaryAction>
-                    {/* TODO: only display when this message is hovered */}
-                    <IconButton>
-                        <MoreVertIcon />
-                    </IconButton>
-                </ListItemSecondaryAction>
-
-                {hasThread && (
-                    <Button variant="text" >
-                        Thread
-                    </Button>)}
-                <ReactionComponent chatId={props.chatId} signal={props.signal} />
-            </Box>
-        </ListItem>
+                            <Typography
+                                sx={{
+                                    fontWeight: 900,
+                                }}
+                            >
+                                {/* TODO: fix reactive */}
+                                {props.signal.userId ? users()[props.signal.userId]?.name : "Concord"}
+                            </Typography>
+                            &nbsp;&nbsp;
+                            <DateItem date={props.signal.createdAt} />
+                        </Box>
+                    </Show>
+                    <Renderer signal={props.signal} />
+                    <Show when={hovered()}>
+                        <ListItemSecondaryAction>
+                            {/* TODO: only display when this message is hovered */}
+                            <IconButton>
+                                <MoreVertIcon />
+                            </IconButton>
+                        </ListItemSecondaryAction>
+                    </Show>
+                    {hasThread && (
+                        <Button variant="text" >
+                            Thread
+                        </Button>)}
+                    <ReactionComponent chatId={props.chatId} signal={props.signal} />
+                </Box>
+            </ListItem>
+        </div>
     )
 }
