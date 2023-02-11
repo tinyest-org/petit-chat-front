@@ -6,12 +6,12 @@ import { ID } from "../../../store/common/type";
 import { RawSignal } from "../../../store/signal/type";
 import { useUsers } from "../../../store/user/context";
 import { User } from "../../../store/user/type";
-import { distinct } from "../../../utils/utils";
+import { distinct, parseId } from "../../../utils/utils";
 import LoadingComponent from "../../common/LoadingComponent/LoadingComponent";
 import OneMessage, { ExtendedSignal } from "./messageItem";
 import NewMessage from "./newMessage";
 
-async function fetchMessages(id: string): Promise<(ExtendedSignal & { isFirst: boolean })[]> {
+async function fetchMessages(id: ID): Promise<(ExtendedSignal & { isFirst: boolean })[]> {
     const res = await getSignals(id);
     return mapResult(res.reverse()
         .filter(e => e.content !== null));
@@ -34,7 +34,7 @@ export default function OneConv() {
 
     const params = useParams<{ id: string }>();
     const [isEnd, setIsEnd] = createSignal(false);
-    const chatId = () => params.id;
+    const chatId = () => parseId(params.id);
     const [data, { refetch, mutate }] = createResource(chatId, fetchMessages);
     const [users, { add }] = useUsers();
 

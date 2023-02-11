@@ -86,17 +86,6 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
             body: body || undefined,
         });
 
-        if (res.status >= 400) {
-            try {
-                if (res.status === 401) {
-                    this.api.securityProvider.login();
-                } else {
-                    throw new HTTPRequestError(res.status, await res.json()); // todo better handle error
-                }
-            } catch {
-                throw new HTTPRequestError(res.status, "Unknown error");
-            }
-        }
         const finalReponse = await this.decoder.convert({ response: res, query: t });
         // move to base class ?
         Object.keys(this.handles).forEach(k => {
@@ -109,6 +98,11 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
 class JsonDecoder<R, Q = any> implements Converter<{ response: Response, query: any }, R> {
     async convert({ response }: { response: Response, query: Q }): Promise<R> {
         const text = await response.text();
+
+        if (response.status >= 400) {
+            throw new HTTPRequestError(response.status, text); // todo better handle error
+        }
+
         // handle empty case
         if (response.headers.get("content-length") === "0"
             || response.status === 204
@@ -120,9 +114,12 @@ class JsonDecoder<R, Q = any> implements Converter<{ response: Response, query: 
     }
 }
 
-export class BlobDecoder implements Converter<Response, Blob> {
-    convert(t: Response): Promise<Blob> {
-        return t.blob();
+class BlobDecoder implements Converter<{ response: Response, query: any }, Blob> {
+    async convert({ response }: { response: Response, query: any }): Promise<Blob> {
+        if (response.status >= 400) {
+            throw new HTTPRequestError(response.status, await response.text()); // todo better handle error
+        }
+        return response.blob();
     }
 }
 
@@ -171,12 +168,19 @@ export function createConverter<T extends {}, R>(convert: (t: T) => Promise<R>):
     return { convert };
 }
 
-export function createHttpConverter<Q extends {}, T extends { response: Response, query: Q }, R>(convert: (t: T) => Promise<R>): Converter<T, R> {
-    return { convert };
+export function createHttpConverter<
+    Q extends {},
+    R,
+    T extends { response: Response, query: Q } = { response: Response, query: Q }
+>(convert: (t: T) => Promise<R>): Converter<T, R> {
+    return createConverter(convert);
 }
 
 export abstract class BooleanHttpLink<T extends {}> extends BaseHttpLink<T, { query: T, success: boolean }> {
-    protected decoder = createHttpConverter<T, { query: T, response: Response }, { query: T, success: boolean }>(async ({ query }) => {
+    protected decoder = createHttpConverter<T, { query: T, success: boolean }>(async ({ query, response }) => {
+        if (response.status >= 400) {
+            return { query, success: false };
+        }
         return { query, success: true };
     });
     protected encoder = new JsonQueryEncoder<T>(this.paramExtractor);

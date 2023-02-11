@@ -1,3 +1,5 @@
+import { ID } from "../store/common/type";
+
 export function distinct<T, U>(a: T[], getter: (item: T) => U) {
     const set = new Set<U>();
     return a.filter(item => {
@@ -9,4 +11,9 @@ export function distinct<T, U>(a: T[], getter: (item: T) => U) {
             return true;
         }
     });
+}
+
+
+export function parseId(s: string) {
+    return s as ID;
 }

@@ -1,9 +1,9 @@
-
+import { Opaque } from 'type-fest';
 
 /**
  * Basic abtraction for now, should be UUID
  */
-export type ID = string;
+export type ID = Opaque<string, 'ID'>;
 
 /**
  * Basic abtraction for now, should be Date

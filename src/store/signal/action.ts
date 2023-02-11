@@ -36,3 +36,23 @@ export const addReaction = new PutBooleanHttpLink<{ chatId: ID, signalId: ID, va
 export const removeReaction = new DeleteJsonHttpLink<{ chatId: ID, signalId: ID, value: string }, void>(
     httpApi, signalReactionUrl, ({ chatId, signalId, value }) => ({ path: { chatId, signalId, value } })
 );
+
+// https://github.com/sindresorhus/type-fest/pull/262/files
+
+type IsParameter<Part> = Part extends `{${infer ParamName}}` ? ParamName : never;
+type FilteredParts<Path> = Path extends `${infer PartA}/${infer PartB}`
+  ? IsParameter<PartA> | FilteredParts<PartB>
+  : IsParameter<Path>;
+type ParamValue<Key> = Key extends `...${infer Anything}` ? string[] : number;
+type RemovePrefixDots<Key> = Key extends `...${infer Name}` ? Name : Key;
+type Params<Path> = {
+  [Key in FilteredParts<Path> as RemovePrefixDots<Key>]: ParamValue<Key>;
+};
+type CallbackFn<Path> = (req: { params: Params<Path> }) => void;
+
+function get<Path extends string>(path: Path, callback: CallbackFn<Path>) {
+	// TODO: implement
+}
+get("/chat/{chatId}/{signalId}/reaction/{value}", (e)=>{
+    e.params.chatId
+});
