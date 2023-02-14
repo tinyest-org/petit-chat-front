@@ -3,6 +3,6 @@ import { createTheme } from "@suid/material";
 
 export const theme = createTheme({
     palette: {
-        mode: 'light',
+        mode: 'dark',
     }
 });

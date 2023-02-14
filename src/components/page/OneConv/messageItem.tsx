@@ -1,6 +1,6 @@
-import MoreVertIcon from '@suid/icons-material/MoreVert';
+import FavoriteIcon from '@suid/icons-material/Favorite';
 import { Box, Icon, IconButton, ListItem, ListItemAvatar, ListItemSecondaryAction, Typography } from "@suid/material";
-import { createEffect, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import { ID } from '../../../store/common/type';
 import { addReaction, removeReaction } from '../../../store/signal/action';
 import { mapSignalType, RawSignal, Reaction } from "../../../store/signal/type";
@@ -8,8 +8,9 @@ import { useUsers } from "../../../store/user/context";
 import ChatAvatar, { useUser } from "../../common/Avatar/Avatar";
 import Button from "../../common/Button/Button";
 import DateItem from "../../common/Date/DateItem";
+import { MessageHelper } from './messageHelper';
 import { renderers } from "./renderers/renderers";
-import FavoriteIcon from '@suid/icons-material/Favorite';
+import * as unicodeEmoji from 'unicode-emoji';
 
 export type ExtendedSignal =
     RawSignal & {
@@ -36,11 +37,9 @@ function ReactionToggle(props: { reaction: string, signalId: ID, chatId: ID }) {
 
     return (
         <>
-            <IconButton size='small' onClick={remove} >
-                <Icon>
-                    {props.reaction}
-                </Icon>
-            </IconButton>
+            <Button size='small' onClick={remove}>
+                {icon.emoji}
+            </Button>
         </>
     );
 }
@@ -79,12 +78,12 @@ function ReactionComponent(props: Props & { chatId: ID }) {
             <For each={reactions()} >
                 {(r) => <ReactionToggle chatId={props.chatId} signalId={props.signal.uuid} reaction={r.value} />}
             </For>
-            <Button onClick={() => {
+            <Button size='small' onClick={() => {
                 addReaction.query({
                     chatId: props.chatId, signalId: props.signal.uuid, value: 'favorite', userId
                 });
-            }} >
-                <FavoriteIcon />
+            }}>
+                {icon.emoji}
             </Button>
         </Box>
     );
@@ -108,7 +107,7 @@ export default function OneMessage(props: Props & { isFirst: boolean; chatId: ID
     return (
         <div
             onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+        // onMouseLeave={() => setHovered(false)}
         >
             <ListItem
                 sx={{
@@ -155,16 +154,14 @@ export default function OneMessage(props: Props & { isFirst: boolean; chatId: ID
                     <Renderer signal={props.signal} />
                     <Show when={hovered()}>
                         <ListItemSecondaryAction>
-                            {/* TODO: only display when this message is hovered */}
-                            <IconButton>
-                                <MoreVertIcon />
-                            </IconButton>
+                            <MessageHelper />
                         </ListItemSecondaryAction>
                     </Show>
-                    {hasThread && (
+                    <Show when={hasThread}>
                         <Button variant="text" >
                             Thread
-                        </Button>)}
+                        </Button>
+                    </Show>
                     <ReactionComponent chatId={props.chatId} signal={props.signal} />
                 </Box>
             </ListItem>
