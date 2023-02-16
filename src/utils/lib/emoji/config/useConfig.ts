@@ -13,7 +13,8 @@ import { CategoriesConfig } from './categoryConfig';
 import { PickerDimensions, PreviewConfig } from './config';
 
 export function useSearchPlaceHolderConfig() {
-  return usePickerConfig()!;;
+  const [state] = usePickerConfig()!;
+  return () => state().searchPlaceHolder;
 }
 
 export function useDefaultSkinToneConfig() {

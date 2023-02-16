@@ -42,7 +42,7 @@ type ElementRefs = {
   VariationPickerRef: ElementRef<HTMLDivElement>;
 };
 
-const ElementRefContext = createContext<ElementRefs>({
+export const ElementRefContext = createContext<ElementRefs>({
   PickerMainRef: createSignal(null),
   AnchoredEmojiRef: createSignal(null),
   BodyRef: createSignal(null),
@@ -52,20 +52,23 @@ const ElementRefContext = createContext<ElementRefs>({
   VariationPickerRef: createSignal(null),
 });
 
-function useElementRef() {
+export function useElementRef() {
   return useContext(ElementRefContext);
 }
 
 export function usePickerMainRef() {
-  return useElementRef().PickerMainRef;
+  const ref = useElementRef();
+  return () => ref.PickerMainRef;
 }
 
 export function useAnchoredEmojiRef() {
-  return useElementRef().AnchoredEmojiRef;
+  const ref = useElementRef();
+  return () => ref.AnchoredEmojiRef;
 }
 
 export function useSetAnchoredEmojiRef(): (target: NullableElement) => void {
-  const [AnchoredEmojiRef, setRef] = useAnchoredEmojiRef();
+  const anchoredEmojiRef = useAnchoredEmojiRef()!;
+  const [AnchoredEmojiRef, setRef] = anchoredEmojiRef();
   return (target: NullableElement) => {
     if (target === null && AnchoredEmojiRef() !== null) {
       focusElement(AnchoredEmojiRef());
@@ -76,21 +79,26 @@ export function useSetAnchoredEmojiRef(): (target: NullableElement) => void {
 }
 
 export function useBodyRef() {
-  return useElementRef()['BodyRef'];
+  const ref = useElementRef();
+  return () => ref.BodyRef;
 }
 
 export function useSearchInputRef() {
-  return useElementRef()['SearchInputRef'];
+  const ref = useElementRef();
+  return () => ref.SearchInputRef;
 }
 
 export function useSkinTonePickerRef() {
-  return useElementRef()['SkinTonePickerRef'];
+  const ref = useElementRef();
+  return () => ref.SkinTonePickerRef;
 }
 
 export function useCategoryNavigationRef() {
-  return useElementRef()['CategoryNavigationRef'];
+  const ref = useElementRef();
+  return () => ref['CategoryNavigationRef'];
 }
 
 export function useVariationPickerRef() {
-  return useElementRef()['VariationPickerRef'];
+  const ref = useElementRef();
+  return () => ref['VariationPickerRef'];
 }

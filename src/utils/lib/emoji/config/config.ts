@@ -17,7 +17,8 @@ import {
 } from './categoryConfig';
 
 export function mergeConfig(
-  userConfig: PickerConfig = {}
+  // @ts-ignore
+  userConfig: PickerConfig = [() => ({}), (s: any) => { }]
 ): PickerConfigInternal {
   const base = basePickerConfig();
 
@@ -26,8 +27,10 @@ export function mergeConfig(
     userConfig.previewConfig ?? {}
   );
   const config = Object.assign(base, userConfig);
-
-  const categories = mergeCategoriesConfig(userConfig.categories, {
+  console.log(userConfig);
+  
+  // @ts-ignore
+  const categories = mergeCategoriesConfig(userConfig[0]().categories, {
     suggestionMode: config.suggestedEmojisMode
   });
 
@@ -35,12 +38,12 @@ export function mergeConfig(
     ? SkinTonePickerLocation.PREVIEW
     : config.skinTonePickerLocation;
 
-  return {
+  return createSignal({
     ...config,
     categories,
     previewConfig,
     skinTonePickerLocation
-  };
+  });
 }
 
 export function baseSignal(): PickerConfigInternal {

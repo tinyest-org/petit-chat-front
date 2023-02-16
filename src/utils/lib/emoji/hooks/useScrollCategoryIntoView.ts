@@ -6,14 +6,16 @@ import {
 } from '../components/context/ElementRefContext';
 
 export function useScrollCategoryIntoView() {
-  const [BodyRef] = useBodyRef();
-  const [PickerMainRef] = usePickerMainRef();
+  const BodyRef = useBodyRef();
+  const PickerMainRef = usePickerMainRef();
 
   return function scrollCategoryIntoView(category: string): void {
-    if (!BodyRef()) {
+    const [bodyRef] = BodyRef();
+    const [pickerMainRef] = PickerMainRef();
+    if (!bodyRef()) {
       return;
     }
-    const $category = BodyRef()?.querySelector(
+    const $category = bodyRef()?.querySelector(
       `[data-name="${category}"]`
     ) as NullableElement;
 
@@ -23,6 +25,6 @@ export function useScrollCategoryIntoView() {
 
     const offsetTop = $category.offsetTop || 0;
 
-    scrollTo(PickerMainRef(), offsetTop);
+    scrollTo(pickerMainRef(), offsetTop);
   };
 }

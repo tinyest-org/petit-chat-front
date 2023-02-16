@@ -11,8 +11,8 @@ import './Body.css';
 
 export function Body() {
   const BodyRef = useBodyRef();
-  const [_, setRef] = BodyRef;
-  useOnScroll(BodyRef);
+  const [_, setRef] = BodyRef();
+  useOnScroll(BodyRef());
   useMouseDownHandlers(BodyRef);
   useOnMouseMove();
 

@@ -11,8 +11,8 @@ import { useActiveCategoryScrollDetection } from '../../hooks/useActiveCategoryS
 import useIsSearchMode from '../../hooks/useIsSearchMode';
 import { useScrollCategoryIntoView } from '../../hooks/useScrollCategoryIntoView';
 import { Button } from '../atoms/Button';
-import { useCategoryNavigationRef } from '../context/ElementRefContext';
-import { createSignal } from 'solid-js';
+import { ElementRefContext, useCategoryNavigationRef } from '../context/ElementRefContext';
+import { createSignal, useContext } from 'solid-js';
 
 export function CategoryNavigation() {
   const [activeCategory, setActiveCategory] = createSignal<string | null>(null);
@@ -21,15 +21,18 @@ export function CategoryNavigation() {
   const isSearchMode = useIsSearchMode();
 
   const categoriesConfig = useCategoriesConfig();
-  const [, setRef] = useCategoryNavigationRef();
-
+  const state = useContext(ElementRefContext)!;
+  // const [, setRef] = useCategoryNavigationRef();
+  const setRef = (r: any) => {
+    state.CategoryNavigationRef[1](r);
+  }
   return (
     <div class="epr-category-nav" ref={setRef}>
-      {categoriesConfig.map(categoryConfig => {
+      {categoriesConfig().map(categoryConfig => {
         const category = categoryFromCategoryConfig(categoryConfig);
         return (
           <Button
-            tabIndex={isSearchMode ? -1 : 0}
+            tabIndex={isSearchMode() ? -1 : 0}
             className={clsx('epr-cat-btn', `epr-icn-${category}`, {
               [ClassNames.active]: category === activeCategory()
             })}

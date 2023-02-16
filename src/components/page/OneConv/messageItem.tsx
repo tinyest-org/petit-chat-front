@@ -11,6 +11,8 @@ import DateItem from "../../common/Date/DateItem";
 import { MessageHelper } from './messageHelper';
 import { renderers } from "./renderers/renderers";
 import * as unicodeEmoji from 'unicode-emoji';
+import { EmojiButtonSelector } from '../../../utils/lib/emoji/DomUtils/selectors';
+import EmojiPicker from '../../../utils/lib/emoji';
 
 export type ExtendedSignal =
     RawSignal & {
@@ -38,7 +40,8 @@ function ReactionToggle(props: { reaction: string, signalId: ID, chatId: ID }) {
     return (
         <>
             <Button size='small' onClick={remove}>
-                {icon.emoji}
+                {/* {icon.emoji} */}
+                like
             </Button>
         </>
     );
@@ -83,7 +86,8 @@ function ReactionComponent(props: Props & { chatId: ID }) {
                     chatId: props.chatId, signalId: props.signal.uuid, value: 'favorite', userId
                 });
             }}>
-                {icon.emoji}
+                {/* {icon.emoji} */}
+                like
             </Button>
         </Box>
     );
@@ -156,6 +160,7 @@ export default function OneMessage(props: Props & { isFirst: boolean; chatId: ID
                         <ListItemSecondaryAction>
                             <MessageHelper />
                         </ListItemSecondaryAction>
+                        <EmojiPicker />
                     </Show>
                     <Show when={hasThread}>
                         <Button variant="text" >

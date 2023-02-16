@@ -36,14 +36,14 @@ export function scrollBy(root: NullableElement, by: number): void {
 }
 
 export function useScrollTo() {
-  const [BodyRef] = useBodyRef();
+  const BodyRef = useBodyRef();
 
   return (
     (top: number) => {
       requestAnimationFrame(() => {
-        const ref = BodyRef();
-        if (ref) {
-          ref.scrollTop = top;
+        const [ref] = BodyRef();
+        if (ref()) {
+          ref()!.scrollTop = top;
         }
       });
     }

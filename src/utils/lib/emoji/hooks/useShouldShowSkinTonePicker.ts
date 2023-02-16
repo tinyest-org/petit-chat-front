@@ -2,21 +2,21 @@ import { useSkinTonePickerLocationConfig } from '../config/useConfig';
 import { SkinTonePickerLocation } from '../types/exposedTypes';
 
 export function useShouldShowSkinTonePicker() {
-  const [state] = useSkinTonePickerLocationConfig();
+  const skinTonePickerLocation = useSkinTonePickerLocationConfig();
 
   return function shouldShowSkinTonePicker(location: SkinTonePickerLocation) {
-    return () => state().skinTonePickerLocation === location;
+    return () => skinTonePickerLocation() === location;
   };
 }
 
 export function useIsSkinToneInSearch() {
-  const [state] = useSkinTonePickerLocationConfig();
+  const skinTonePickerLocation = useSkinTonePickerLocationConfig();
 
-  return () => state().skinTonePickerLocation === SkinTonePickerLocation.SEARCH;
+  return () => skinTonePickerLocation() === SkinTonePickerLocation.SEARCH;
 }
 
 export function useIsSkinToneInPreview() {
-  const [state] = useSkinTonePickerLocationConfig();
+  const skinTonePickerLocation = useSkinTonePickerLocationConfig();
 
-  return () => state().skinTonePickerLocation === SkinTonePickerLocation.PREVIEW;
+  return () => skinTonePickerLocation() === SkinTonePickerLocation.PREVIEW;
 }

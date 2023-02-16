@@ -1,7 +1,7 @@
 import { useSearchTermState } from '../components/context/PickerContext';
 
-export default function useIsSearchMode(): boolean {
-  const [searchTerm] = useSearchTermState();
+export default function useIsSearchMode() {
+  const value = useSearchTermState();
 
-  return !!searchTerm;
+  return () => !!value();
 }

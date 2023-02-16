@@ -5,13 +5,13 @@ import { emojiUnified } from '../dataUtils/emojiSelectors';
 import { useIsEmojiFiltered } from './useFilter';
 
 export function useIsEmojiHidden(): (emoji: DataEmoji) => IsHiddenReturn {
-  const [emojisThatFailedToLoad] = useEmojisThatFailedToLoadState();
+  const emojisThatFailedToLoad = useEmojisThatFailedToLoadState();
   const isEmojiFiltered = useIsEmojiFiltered();
 
   return (emoji: DataEmoji): IsHiddenReturn => {
     const unified = emojiUnified(emoji);
 
-    const failedToLoad = emojisThatFailedToLoad.has(unified);
+    const failedToLoad = emojisThatFailedToLoad().has(unified);
     const filteredOut = isEmojiFiltered(unified);
 
     return {

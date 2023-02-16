@@ -6,10 +6,10 @@ import { useDisallowedEmojis } from '../../hooks/useDisallowedEmojis';
 import { FilterDict } from '../../hooks/useFilter';
 import { useMarkInitialLoad } from '../../hooks/useInitialLoad';
 import { SkinTones } from '../../types/exposedTypes';
-import { useContext, createContext, createSignal, JSX, Signal } from 'solid-js';
+import { useContext, createContext, createSignal, JSX, Signal, Accessor } from 'solid-js';
 
 
-export function PickerContextProvider({ children }: Props) {
+export function PickerContextProvider(props: Props) {
   const disallowedEmojis = useDisallowedEmojis();
   const defaultSkinTone = useDefaultSkinToneConfig();
 
@@ -17,57 +17,61 @@ export function PickerContextProvider({ children }: Props) {
   const filterRef = alphaNumericEmojiIndex;
   const disallowClickRef = false;
   const disallowMouseRef = false;
-  const disallowedEmojisRef = disallowedEmojis;
+  const disallowedEmojisRef = disallowedEmojis();
 
   const suggestedUpdateState = useDebouncedState(Date.now(), 200);
   const searchTerm = useDebouncedState('', 100);
-  const skinToneFanOpenState = createSignal<boolean>(false);
+  const skinToneFanOpenState = false;
   const activeSkinTone = defaultSkinTone();
-  const activeCategoryState = createSignal<ActiveCategoryState>(null);
-  const emojisThatFailedToLoadState = createSignal<Set<string>>(new Set());
-  const emojiVariationPickerState = createSignal<DataEmoji | null>(null);
+  const activeCategoryState: string | null = null;
+  const emojisThatFailedToLoadState = new Set<string>();
+  const emojiVariationPickerState: DataEmoji | null = null;
   const [isPastInitialLoad, setIsPastInitialLoad] = createSignal(false);
 
   useMarkInitialLoad(setIsPastInitialLoad);
 
+  const sig = createSignal<ContextType>({
+    activeCategoryState,
+    activeSkinTone,
+    disallowClickRef,
+    disallowMouseRef,
+    disallowedEmojisRef,
+    emojiVariationPickerState,
+    emojisThatFailedToLoadState,
+    filterRef,
+    isPastInitialLoad,
+    searchTerm,
+    skinToneFanOpenState,
+    suggestedUpdateState
+  });
+
   return (
     <PickerContext.Provider
-      value={{
-        activeCategoryState,
-        activeSkinTone,
-        disallowClickRef,
-        disallowMouseRef,
-        disallowedEmojisRef,
-        emojiVariationPickerState,
-        emojisThatFailedToLoadState,
-        filterRef,
-        isPastInitialLoad,
-        searchTerm,
-        skinToneFanOpenState,
-        suggestedUpdateState
-      }}
+      value={sig}
     >
-      {children}
+      {props.children}
     </PickerContext.Provider>
   );
 }
 
-type ContextType = Signal<{
-  searchTerm: string;
-  suggestedUpdateState: number;
-  activeCategoryState: Signal<ActiveCategoryState>;
+type DebouncedState<T> = [Accessor<T>, (v: T) => Promise<void>];
+
+type ContextType = {
+  searchTerm: DebouncedState<string>;
+  suggestedUpdateState: DebouncedState<number>;
+  activeCategoryState: ActiveCategoryState;
   activeSkinTone: SkinTones;
-  emojisThatFailedToLoadState: Signal<Set<string>>;
-  isPastInitialLoad: boolean;
+  emojisThatFailedToLoadState: Set<string>;
+  isPastInitialLoad: Accessor<boolean>;
   emojiVariationPickerState: DataEmoji | null;
   skinToneFanOpenState: boolean;
-  filterRef: Signal<FilterState>;
+  filterRef: FilterState;
   disallowClickRef: boolean;
   disallowMouseRef: boolean;
   disallowedEmojisRef: Record<string, boolean>;
-}>;
+};
 
-const PickerContext = createContext<ContextType>();
+export const PickerContext = createContext<Signal<ContextType>>();
 
 type Props = Readonly<{
   children: JSX.Element;
@@ -75,65 +79,67 @@ type Props = Readonly<{
 
 export function useFilterRef() {
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().filterRef;
 }
 
 export function useDisallowClickRef() {
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().disallowClickRef;
 }
 
 export function useDisallowMouseRef() {
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().disallowMouseRef;
 }
 
 export function useSearchTermState() {
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().searchTerm;
 }
 
 export function useActiveSkinToneState() {
+  console.log(useContext(PickerContext));
   const [state, setState] = useContext(PickerContext)!;
   return () => state().activeSkinTone;
 }
 
 export function useEmojisThatFailedToLoadState() {
+  console.log(useContext(PickerContext));
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().emojisThatFailedToLoadState;
 }
 
 export function useIsPastInitialLoad() {
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().isPastInitialLoad;
 }
 
 export function useEmojiVariationPickerState() {
+  console.log(useContext(PickerContext));
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().emojiVariationPickerState;
 }
 
 export function useSkinToneFanOpenState() {
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().skinToneFanOpenState;
 }
 
 export function useDisallowedEmojisRef() {
   const [state, setState] = useContext(PickerContext)!;
-  return state;
+  return () => state().disallowedEmojisRef;
 }
 
-// export function useUpdateSuggested(): [number, () => void] {
-//   const { suggestedUpdateState } = useContext(PickerContext);
+export function useUpdateSuggested(): () => [number, () => void] {
+  const [state] = useContext(PickerContext)!;
 
-//   const [suggestedUpdated, setsuggestedUpdate] = suggestedUpdateState;
-//   return [
-//     suggestedUpdated,
-//     function updateSuggested() {
-//       setsuggestedUpdate(Date.now());
-//     }
-//   ];
-// }
+  return () => [
+    state().suggestedUpdateState[0](),
+    function updateSuggested() {
+      state().suggestedUpdateState[1](Date.now());
+    }
+  ];
+}
 
 export type FilterState = Record<string, FilterDict>;
 

@@ -1,4 +1,5 @@
-import { createContext, JSX, useContext } from 'solid-js';
+import { createContext, createSignal, JSX, splitProps, useContext } from 'solid-js';
+import { spread } from 'solid-js/web';
 import {
   baseSignal,
   mergeConfig,
@@ -13,10 +14,13 @@ type Props = PickerConfig &
 
 const ConfigContext = createContext<PickerConfigInternal>(baseSignal());
 
-export function PickerConfigProvider({ children, ...config }: Props) {
+export function PickerConfigProvider(props: Props) {
+  const [children, config ] = splitProps(props, ["children"]) ;
+  const conf = createSignal(config);
   return (
-    <ConfigContext.Provider value={mergeConfig(config)}>
-      {children}
+    // @ts-ignore
+    <ConfigContext.Provider value={mergeConfig(conf)}>
+      {props.children}
     </ConfigContext.Provider>
   );
 }

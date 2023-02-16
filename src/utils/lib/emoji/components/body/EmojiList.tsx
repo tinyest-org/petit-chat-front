@@ -96,9 +96,9 @@ function RenderCategory({
         unified={unified}
         hidden={failedToLoad}
         hiddenOnSearch={filteredOut}
-        emojiStyle={emojiStyle}
-        lazyLoad={lazyLoadEmojis}
-        getEmojiUrl={getEmojiUrl}
+        emojiStyle={emojiStyle()}
+        lazyLoad={lazyLoadEmojis()}
+        getEmojiUrl={getEmojiUrl()}
       />
     );
   });

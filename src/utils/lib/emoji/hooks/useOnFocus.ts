@@ -6,24 +6,26 @@ import { emojiHasVariations } from '../dataUtils/emojiSelectors';
 import { EmojiStyle } from '../types/exposedTypes';
 
 import { preloadEmoji } from './preloadEmoji';
-import { createEffect } from 'solid-js';
+import { createEffect, onCleanup } from 'solid-js';
 
 export function useOnFocus() {
-  const [BodyRef] = useBodyRef();
-  const [state] = useEmojiStyleConfig();
+  const BodyRef = useBodyRef();
+  const emojiStyle = useEmojiStyleConfig();
+  const getEmojiUrl = useGetEmojiUrlConfig();
 
   createEffect(() => {
-    if (state().emojiStyle === EmojiStyle.NATIVE) {
+    if (emojiStyle() === EmojiStyle.NATIVE) {
       return;
     }
 
     const bodyRef = BodyRef();
 
-    bodyRef?.addEventListener('focusin', onFocus);
+    bodyRef[0]()?.addEventListener('focusin', onFocus);
 
-    return () => {
-      bodyRef?.removeEventListener('focusin', onFocus);
-    };
+    onCleanup(() => {
+      
+      bodyRef[0]()?.removeEventListener('focusin', onFocus);
+    });
 
     function onFocus(event: FocusEvent) {
       const button = buttonFromTarget(event.target as HTMLElement);
@@ -39,7 +41,7 @@ export function useOnFocus() {
       }
 
       if (emojiHasVariations(emoji)) {
-        preloadEmoji(state().getEmojiUrl, emoji, state().emojiStyle);
+        preloadEmoji(getEmojiUrl(), emoji, emojiStyle());
       }
     }
   });

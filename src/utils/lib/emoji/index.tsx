@@ -19,8 +19,9 @@ export interface Props extends PickerConfig {}
 
 export default function EmojiPicker(props: Props) {
   return (
-    <ErrorBoundary fallback={err => err}>
+    // <ErrorBoundary fallback={err => err}>
+      // @ts-ignore
       <EmojiPickerReact {...props} />
-    </ErrorBoundary>
+    // </ErrorBoundary>
   );
 }

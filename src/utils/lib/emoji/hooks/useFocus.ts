@@ -6,33 +6,33 @@ import {
 } from '../components/context/ElementRefContext';
 
 export function useFocusSearchInput() {
-  const [SearchInputRef] = useSearchInputRef();
-
+  const SearchInputRef = useSearchInputRef();
+  const [searchInputRef] = SearchInputRef();
   return () => {
-    focusElement(SearchInputRef());
+    focusElement(searchInputRef());
   }
 }
 
 export function useFocusSkinTonePicker() {
-  const [SkinTonePickerRef] = useSkinTonePickerRef();
-
+  const SkinTonePickerRef = useSkinTonePickerRef();
+  const [skinTonePickerRef] = SkinTonePickerRef();
   return () => {
     if (!SkinTonePickerRef()) {
       return;
     }
 
-    focusFirstElementChild(SkinTonePickerRef());
+    focusFirstElementChild(skinTonePickerRef());
   }
 }
 
 export function useFocusCategoryNavigation() {
-  const [CategoryNavigationRef] = useCategoryNavigationRef();
-
+  const CategoryNavigationRef = useCategoryNavigationRef();
+  const [categoryNavigationRef] = CategoryNavigationRef();
   return () => {
-    if (!CategoryNavigationRef()) {
+    if (!categoryNavigationRef()) {
       return;
     }
 
-    focusFirstElementChild(CategoryNavigationRef());
+    focusFirstElementChild(categoryNavigationRef());
   }
 }

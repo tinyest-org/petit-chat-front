@@ -26,7 +26,7 @@ import {
 import { useEmojiVariationPickerState } from '../context/PickerContext';
 import { ClickableEmoji } from '../emoji/Emoji';
 import './EmojiVariationPicker.css';
-import { createEffect } from 'solid-js';
+import { Accessor, createEffect, JSX } from 'solid-js';
 
 enum Direction {
   Up,
@@ -34,24 +34,26 @@ enum Direction {
 }
 
 export function EmojiVariationPicker() {
-  const AnchoredEmojiRef = useAnchoredEmojiRef();
-  const VariationPickerRef = useVariationPickerRef();
-  const [emoji] = useEmojiVariationPickerState();
+  const anchoredEmojiRef = useAnchoredEmojiRef();
+  const [AnchoredEmojiRef] = anchoredEmojiRef();
+  const variationPickerRef = useVariationPickerRef();
+  const [VariationPickerRef] = variationPickerRef();
+  const emoji = useEmojiVariationPickerState();
   const emojiStyle = useEmojiStyleConfig();
 
   const { getTop, getMenuDirection } = useVariationPickerTop(
     VariationPickerRef
   );
   const setAnchoredEmojiRef = useSetAnchoredEmojiRef();
-  const getPointerStyle = usePointerStyle(VariationPickerRef);
+  const getPointerStyle = usePointerStyle(AnchoredEmojiRef);
   const getEmojiUrl = useGetEmojiUrlConfig();
 
-  const button = buttonFromTarget(AnchoredEmojiRef.current);
+  const button = buttonFromTarget(AnchoredEmojiRef());
 
   const visible =
     emoji &&
     button &&
-    emojiHasVariations(emoji) &&
+    emojiHasVariations(emoji()!) &&
     button.classList.contains(ClassNames.emojiHasVariatios);
 
   createEffect(() => {
@@ -59,12 +61,12 @@ export function EmojiVariationPicker() {
       return;
     }
 
-    focusFirstVisibleEmoji(VariationPickerRef.current);
+    focusFirstVisibleEmoji(VariationPickerRef());
   }, [VariationPickerRef, visible, AnchoredEmojiRef]);
 
   let top, pointerStyle;
 
-  if (!visible && AnchoredEmojiRef.current) {
+  if (!visible && AnchoredEmojiRef()) {
     setAnchoredEmojiRef(null);
   } else {
     top = getTop();
@@ -74,42 +76,42 @@ export function EmojiVariationPicker() {
   return (
     <div
       ref={VariationPickerRef}
-      className={clsx(ClassNames.variationPicker, {
+      class={clsx(ClassNames.variationPicker, {
         visible,
         'pointing-up': getMenuDirection() === Direction.Down
       })}
-      style={{ top }}
+      style={{ top: `${top}px` }}
     >
-      {visible && emoji
-        ? [emojiUnified(emoji)]
-            .concat(emojiVariations(emoji))
-            .slice(0, 6)
-            .map(unified => (
-              <ClickableEmoji
-                key={unified}
-                emoji={emoji}
-                unified={unified}
-                emojiStyle={emojiStyle}
-                showVariations={false}
-                getEmojiUrl={getEmojiUrl}
-              />
-            ))
+      {visible && emoji()
+        ? [emojiUnified(emoji()!)]
+          .concat(emojiVariations(emoji()!))
+          .slice(0, 6)
+          .map(unified => (
+            <ClickableEmoji
+              // key={unified}
+              emoji={emoji()!}
+              unified={unified}
+              emojiStyle={emojiStyle()}
+              showVariations={false}
+              getEmojiUrl={getEmojiUrl()}
+            />
+          ))
         : null}
-      <div className="epr-emoji-pointer" style={pointerStyle} />
+      <div class="epr-emoji-pointer" style={pointerStyle} />
     </div>
   );
 }
 
-function usePointerStyle(VariationPickerRef: React.RefObject<HTMLElement>) {
-  const AnchoredEmojiRef = useAnchoredEmojiRef();
+function usePointerStyle(VariationPickerRef: Accessor<HTMLElement | null>) {
+  const AnchoredEmojiRef = useAnchoredEmojiRef()!;
   return function getPointerStyle() {
-    const style: React.CSSProperties = {};
-    if (!VariationPickerRef.current) {
+    const style: JSX.CSSProperties = {};
+    if (!VariationPickerRef()) {
       return style;
     }
 
-    if (AnchoredEmojiRef.current) {
-      const button = buttonFromTarget(AnchoredEmojiRef.current);
+    if (AnchoredEmojiRef()) {
+      const button = buttonFromTarget(AnchoredEmojiRef()[0]());
 
       const offsetLeft = emojiTruOffsetLeft(button);
 
@@ -118,7 +120,7 @@ function usePointerStyle(VariationPickerRef: React.RefObject<HTMLElement>) {
       }
 
       // half of the button
-      style.left = offsetLeft + button?.clientWidth / 2;
+      style.left = `${offsetLeft + button?.clientWidth / 2}px`;
     }
 
     return style;
@@ -126,10 +128,10 @@ function usePointerStyle(VariationPickerRef: React.RefObject<HTMLElement>) {
 }
 
 function useVariationPickerTop(
-  VariationPickerRef: React.RefObject<HTMLElement>
+  VariationPickerRef: Accessor<HTMLElement | null>
 ) {
-  const AnchoredEmojiRef = useAnchoredEmojiRef();
-  const BodyRef = useBodyRef();
+  const AnchoredEmojiRef = useAnchoredEmojiRef()!;
+  const BodyRef = useBodyRef()!;
   let direction = Direction.Up;
 
   return {
@@ -145,21 +147,21 @@ function useVariationPickerTop(
     direction = Direction.Up;
     let emojiOffsetTop = 0;
 
-    if (!VariationPickerRef.current) {
+    if (!VariationPickerRef()) {
       return 0;
     }
 
-    const height = elementHeight(VariationPickerRef.current);
+    const height = elementHeight(VariationPickerRef());
 
-    if (AnchoredEmojiRef.current) {
-      const bodyRef = BodyRef.current;
-      const button = buttonFromTarget(AnchoredEmojiRef.current);
+    if (AnchoredEmojiRef()) {
+      const [bodyRef] = BodyRef();
+      const button = buttonFromTarget(AnchoredEmojiRef()[0]());
 
       const buttonHeight = elementHeight(button);
 
       emojiOffsetTop = emojiTrueOffsetTop(button);
 
-      const scrollTop = bodyRef?.scrollTop ?? 0;
+      const scrollTop = bodyRef()?.scrollTop ?? 0;
 
       if (scrollTop > emojiOffsetTop - height) {
         direction = Direction.Down;

@@ -12,8 +12,9 @@ import {
 import { parseNativeEmoji } from '../../dataUtils/parseNativeEmoji';
 import { EmojiStyle } from '../../types/exposedTypes';
 import { Button } from '../atoms/Button';
-import { useEmojisThatFailedToLoadState } from '../context/PickerContext';
+import { PickerContext, useEmojisThatFailedToLoadState } from '../context/PickerContext';
 import './Emoji.css';
+import { JSX, useContext } from 'solid-js';
 
 type ClickableEmojiProps = Readonly<
   BaseProps & {
@@ -79,13 +80,13 @@ export function ViewOnlyEmoji({
   lazyLoad,
   getEmojiUrl = emojiUrlByUnified,
 }: BaseProps) {
-  const style = {} as React.CSSProperties;
+  const style = {} as JSX.CSSProperties;
   if (size) {
-    style.width = style.height = style.fontSize = `${size}px`;
+    style.width = style.height = style['font-size'] = `${size}px`;
   }
 
   const emojiToRender = emoji ? emoji : emojiByUnified(unified);
-  if(!emojiToRender) {
+  if (!emojiToRender) {
     return null
   }
 
@@ -112,11 +113,11 @@ function NativeEmoji({
   style,
 }: {
   unified: string;
-  style: React.CSSProperties;
+  style: JSX.CSSProperties;
 }) {
   return (
     <span
-      className={clsx(ClassNames.external, 'epr-emoji-native')}
+      class={clsx(ClassNames.external, 'epr-emoji-native')}
       data-unified={unified}
       style={style}
     >
@@ -136,12 +137,15 @@ function EmojiImg({
   emoji: DataEmoji;
   unified: string;
   emojiStyle: EmojiStyle;
-  style: React.CSSProperties;
+  style: JSX.CSSProperties;
   lazyLoad?: boolean;
   getEmojiUrl: GetEmojiUrl;
 }) {
-  const [, setEmojisThatFailedToLoad] = useEmojisThatFailedToLoadState();
-
+  const [state, setState] = useContext(PickerContext)!;
+  // const setEmojisThatFailedToLoad = useEmojisThatFailedToLoadState();
+  const setEmojisThatFailedToLoad = (a: any) => {
+    setState(old => ({ ...old, emojisThatFailedToLoadState: a }));
+  }
   return (
     <img
       src={getEmojiUrl(unified, emojiStyle)}

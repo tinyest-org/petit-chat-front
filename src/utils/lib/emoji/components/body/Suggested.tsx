@@ -16,19 +16,19 @@ type Props = Readonly<{
   categoryConfig: CategoryConfig;
 }>;
 
-export function Suggested({ categoryConfig }: Props) {
-  const [suggestedUpdated] = useUpdateSuggested();
+export function Suggested(props: Props) {
+  const suggestedUpdated = useUpdateSuggested();
   const suggestedEmojisModeConfig = useSuggestedEmojisModeConfig();
   const getEmojiUrl = useGetEmojiUrlConfig();
   const suggested = createMemo(() => {
-    suggestedUpdated();
-    getsuggested(suggestedEmojisModeConfig) ?? []
+    suggestedUpdated()[1]();
+    return getsuggested(suggestedEmojisModeConfig()) ?? []
   });
   const emojiStyle = useEmojiStyleConfig();
 
   return (
     <EmojiCategory
-      categoryConfig={categoryConfig}
+      categoryConfig={props.categoryConfig}
       hiddenOnSearch
       hidden={suggested().length === 0}
     >
@@ -45,9 +45,9 @@ export function Suggested({ categoryConfig }: Props) {
               <ClickableEmoji
                 showVariations={false}
                 unified={suggestedItem.unified}
-                emojiStyle={emojiStyle}
+                emojiStyle={emojiStyle()}
                 emoji={emoji}
-                getEmojiUrl={getEmojiUrl}
+                getEmojiUrl={getEmojiUrl()}
               />
             );
           }

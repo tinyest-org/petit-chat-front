@@ -1,11 +1,12 @@
 import clsx from 'clsx';
-import * as React from 'react';
+import { JSX } from 'solid-js';
+
 
 type Props = Readonly<{
   className?: string;
-  style?: React.CSSProperties;
+  style?: JSX.CSSProperties;
 }>;
 
 export default function Space({ className, style = {} }: Props) {
-  return <div style={{ flex: 1, ...style }} className={clsx(className)} />;
+  return <div style={{ flex: 1, ...style }} class={clsx(className)} />;
 }

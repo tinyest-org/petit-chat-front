@@ -1,16 +1,16 @@
 import clsx from 'clsx';
 import { JSX } from 'solid-js';
 
-interface Props
-  extends JSX.DetailedHTMLProps<
-    ButtonHTMLAttributes<HTMLButtonElement>,
-    HTMLButtonElement
-  > {
-  className?: string;
-  tabIndex: number;
-}
+// interface Props
+//   extends JSX.DetailedHTMLProps<
+//     ButtonHTMLAttributes<HTMLButtonElement>,
+//     HTMLButtonElement
+//   > {
+//   className?: string;
+//   tabIndex: number;
+// }
 
-export function Button(props: Props) {
+export function Button(props: any) {
   return (
     <button
       type="button"

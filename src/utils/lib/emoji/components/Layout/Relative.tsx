@@ -1,14 +1,14 @@
-import * as React from 'react';
+import { JSX } from "solid-js";
 
 type Props = Readonly<{
-  children: React.ReactNode;
+  children: JSX.Element;
   className?: string;
-  style?: React.CSSProperties;
+  style?: JSX.CSSProperties;
 }>;
 
 export default function Relative({ children, className, style }: Props) {
   return (
-    <div style={{ ...style, position: 'relative' }} className={className}>
+    <div style={{ ...style, position: 'relative' }} class={className}>
       {children}
     </div>
   );

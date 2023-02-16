@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import * as React from 'react';
+import { JSX } from 'solid-js';
 import './Flex.css';
 
 export enum FlexDirection {
@@ -8,9 +8,9 @@ export enum FlexDirection {
 }
 
 type Props = Readonly<{
-  children: React.ReactNode;
+  children: JSX.Element;
   className?: string;
-  style?: React.CSSProperties;
+  style?: JSX.CSSProperties;
   direction?: FlexDirection;
 }>;
 
@@ -21,7 +21,7 @@ export default function Flex({
   direction = FlexDirection.ROW
 }: Props) {
   return (
-    <div style={{ ...style }} className={clsx('Flex', className, direction)}>
+    <div style={{ ...style }} class={clsx('Flex', className, direction)}>
       {children}
     </div>
   );

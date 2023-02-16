@@ -5,6 +5,7 @@ import {
 } from '../components/context/ElementRefContext';
 import {
   FilterState,
+  PickerContext,
   useFilterRef,
   useSearchTermState,
 } from '../components/context/PickerContext';
@@ -12,29 +13,31 @@ import { DataEmoji } from '../dataUtils/DataTypes';
 import { emojiNames } from '../dataUtils/emojiSelectors';
 
 import { useFocusSearchInput } from './useFocus';
+import { useContext } from 'solid-js';
 
 function useSetFilterRef() {
   const filterRef = useFilterRef();
-
+  const [_, setState] = useContext(PickerContext)!;
   return function setFilter(
     setter: FilterState | ((current: FilterState) => FilterState)
   ): void {
     if (typeof setter === 'function') {
-      return setFilter(setter(filterRef.current));
+      return setFilter(setter(filterRef()));
     }
 
-    filterRef.current = setter;
+    setState(old => ({ ...old, filterRef: setter }));
   };
 }
 
 export function useClearSearch() {
   const applySearch = useApplySearch();
-  const SearchInputRef = useSearchInputRef();
   const focusSearchInput = useFocusSearchInput();
+  const SearchInputRef = useSearchInputRef();
+  const [searchInputRef] = SearchInputRef();
 
   return function clearSearch() {
-    if (SearchInputRef.current) {
-      SearchInputRef.current.value = '';
+    if (SearchInputRef()) {
+      searchInputRef()!.value = '';
     }
 
     applySearch('');
@@ -44,12 +47,13 @@ export function useClearSearch() {
 
 export function useAppendSearch() {
   const SearchInputRef = useSearchInputRef();
+  const searchInputRef = SearchInputRef();
   const applySearch = useApplySearch();
 
   return function appendSearch(str: string) {
-    if (SearchInputRef.current) {
-      SearchInputRef.current.value = `${SearchInputRef.current.value}${str}`;
-      applySearch(getNormalizedSearchTerm(SearchInputRef.current.value));
+    if (SearchInputRef()) {
+      searchInputRef[0]()!.value = `${searchInputRef[0]()!.value}${str}`;
+      applySearch(getNormalizedSearchTerm(searchInputRef[0]()!.value));
     } else {
       applySearch(getNormalizedSearchTerm(str));
     }
@@ -62,16 +66,16 @@ export function useFilter() {
   const setFilterRef = useSetFilterRef();
   const applySearch = useApplySearch();
 
-  const [searchTerm] = useSearchTermState();
+  const SearchTerm = useSearchTermState();
 
   return {
     onChange,
-    searchTerm,
+    searchTerm: SearchTerm(),
     SearchInputRef,
   };
 
   function onChange(inputValue: string) {
-    const filter = filterRef.current;
+    const filter = filterRef();
 
     const nextValue = inputValue.toLowerCase();
 
@@ -97,14 +101,16 @@ export function useFilter() {
 }
 
 function useApplySearch() {
-  const [, setSearchTerm] = useSearchTermState();
+  const state = useSearchTermState();
+  const [, setSearchTerm] = state();
   const PickerMainRef = usePickerMainRef();
-
+  const [ref, setRef] = PickerMainRef();
   return function applySearch(searchTerm: string) {
     requestAnimationFrame(() => {
-      setSearchTerm(searchTerm ? searchTerm?.toLowerCase() : searchTerm).then(
+      setSearchTerm(searchTerm ? searchTerm?.toLowerCase() : searchTerm);
+      (
         () => {
-          scrollTo(PickerMainRef.current, 0);
+          scrollTo(ref(), 0);
         }
       );
     });
@@ -133,10 +139,10 @@ function hasMatch(emoji: DataEmoji, keyword: string): boolean {
 }
 
 export function useIsEmojiFiltered(): (unified: string) => boolean {
-  const { current: filter } = useFilterRef();
-  const [searchTerm] = useSearchTermState();
-
-  return (unified) => isEmojiFilteredBySearchTerm(unified, filter, searchTerm);
+  const filterRef = useFilterRef();
+  const SearchTerm = useSearchTermState();
+  const [searchTerm] = SearchTerm();
+  return (unified) => isEmojiFilteredBySearchTerm(unified, filterRef(), searchTerm());
 }
 
 function isEmojiFilteredBySearchTerm(
