@@ -1,6 +1,6 @@
 import { api } from "../../api/api";
 import { httpApi } from "../../api/httpApi";
-import { DeleteBooleanHttpLink, DeleteJsonHttpLink, PostMultipartHttpLink, PutBooleanHttpLink, PutJsonHttpLink } from "../../api/newAPI/httpLink";
+import { DeleteBooleanHttpLink, DeleteJsonHttpLink, PostMultipartHttpLink, PutBooleanHttpLink, PutJsonHttpLink } from "../../api/newAPI/http/httpLink";
 import { ID } from "../common/type";
 import { RawSignal } from "./type"
 

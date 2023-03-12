@@ -1,9 +1,11 @@
-import { RawSignal } from "../../store/signal/type";
-import { httpApi } from "../httpApi";
-import { WebsocketConnection } from "../ws/wsUtils";
-import { getWs } from "../wsApi";
-import { PostMultipartHttpLink } from "./httpLink";
-import { AbstractLink, bridge, BridgeLink, Converter, Link, MultiLink } from "./link";
+import { RawSignal } from "../../../store/signal/type";
+import { httpApi } from "../../httpApi";
+import { WebsocketConnection } from "../../ws/wsUtils";
+import { getWs } from "../../wsApi";
+import { PostMultipartHttpLink } from "../http/httpLink";
+import { AbstractLink, bridge, BridgeLink, Converter, Link, MultiLink } from "../link";
+import { WsJsonDecoder } from "./decoder";
+import { WsJsonEncoder } from "./encoder";
 
 type ArrayElement<ArrayType extends readonly unknown[]> =
     ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
@@ -22,9 +24,6 @@ export type SchemaType = {
 
 export class WsLinker<
     H extends { [k: string]: HandleWsRegistrar },
-
-    Input extends {} = {},
-    Output = {},
 > {
     protected readonly wsAPI: WebsocketConnection;
     protected handles: { [name: string]: WsLink<any, any> } = {};
@@ -33,7 +32,7 @@ export class WsLinker<
 
     constructor(
         wsAPI: WebsocketConnection,
-        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar }
+        registrars: { [key in keyof H]: (linker: WsLinker<any>) => HandleWsRegistrar }
     ) {
         this.wsAPI = wsAPI;
         this.registrars = this.buildRegistrars(registrars) as any;
@@ -46,7 +45,7 @@ export class WsLinker<
 
 
     private buildRegistrars(
-        registrars: { [key in keyof H]: (linker: WsLinker<any, any>) => HandleWsRegistrar<any> }
+        registrars: { [key in keyof H]: (linker: WsLinker<any>) => HandleWsRegistrar<any> }
     ): H {
         const res = {} as H;
         for (const key in registrars) {
@@ -87,16 +86,6 @@ export class WsLinker<
     }
 }
 
-
-
-class WsJsonDecoder<T extends {}> implements Converter<string, T> {
-    // decode once
-    // then decode content
-    async convert(t: string): Promise<T> {
-        return JSON.parse(t);
-    }
-}
-
 interface WsLink<T extends {}, R> extends Link<T, R> {
     query(t: T): Promise<undefined>;
     doOnMessage(r: R): Promise<void>;
@@ -105,20 +94,18 @@ interface WsLink<T extends {}, R> extends Link<T, R> {
 
 // TODO: extract base functions to abstract class
 // like http handling
-export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R> implements WsLink<T, R> {
+export abstract class BaseWsLink<T extends {}, R extends {}> extends AbstractLink<T, R> implements WsLink<T, R> {
     public readonly method: string;
-    protected encoder: Converter<T, any>;
-    protected wsApi: WsLinker<any, any>;
+    protected wsApi: WsLinker<any>;
+    
+    protected abstract encoder: Converter<T, any>;
+    protected abstract decoder: Converter<any, R>;
 
-    constructor(wsApi: WsLinker<any, any>, method: string, receiveOnly: boolean = false) {
+    constructor(wsApi: WsLinker<any>, method: string, receiveOnly: boolean = false) {
         super(receiveOnly);
         this.method = method;
         this.wsApi = wsApi;
-        this.encoder = new WsJsonEncoder(this.method);
     }
-
-    // todo, should add real now
-    protected decoder: Converter<any, R> = new WsJsonDecoder();
 
     async doOnMessage(r: R) {
         const b = await this.decoder.convert(r);
@@ -137,11 +124,12 @@ export class JsonWsLink<T extends {}, R extends {}> extends AbstractLink<T, R> i
     }
 }
 
-export class SimpleToArrayConverter<T> implements Converter<T, T[]> {
-    async convert(t: T): Promise<T[]> {
-        return [t];
-    }
+export class JsonWsLink<T extends {}, R extends {}> extends BaseWsLink<T, R> {
+    protected decoder: Converter<any, R> = new WsJsonDecoder();
+    protected encoder = new WsJsonEncoder(this.method);
 }
+
+
 
 export abstract class HandleWsRegistrar<S extends { name: string } = { name: string }> {
     protected abstract register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
@@ -149,9 +137,9 @@ export abstract class HandleWsRegistrar<S extends { name: string } = { name: str
 
 // should add support for more settings
 export abstract class AbstractWsHandleRegistrar<S extends { name: string }> extends HandleWsRegistrar<S> {
-    protected wsLinker: WsLinker<any, any>;
+    protected wsLinker: WsLinker<any>;
 
-    constructor(wsLinker: WsLinker<any, any>) {
+    constructor(wsLinker: WsLinker<any>) {
         super();
         this.wsLinker = wsLinker;
     }
@@ -166,28 +154,6 @@ export abstract class AbstractWsHandleRegistrar<S extends { name: string }> exte
     protected abstract register<T extends {}, R extends {}>(props: S): WsLink<T, R>;
 }
 
-/**
- * Custom
- * ------------------------
- */
-
-/**
- * Encodes the query in order to send json query using  the 
- * {method},{body} format -> makes it easier on the server side 
- * to properly parse args and route the data
- */
-class WsJsonEncoder<T extends {}> implements Converter<T, string> {
-    method: string;
-    constructor(method: string) {
-        this.method = method;
-    }
-    async convert(t: T): Promise<string> {
-        if (t) {
-            return `${this.method},${JSON.stringify(t)}`;
-        }
-        return `${this.method},`;
-    }
-}
 
 /**
  * deb only present for tests
@@ -206,7 +172,7 @@ class JsonHandleRegistrar extends AbstractWsHandleRegistrar<{
 
 
 const registrars = {
-    json: (linker: WsLinker<{}, {}>) => new JsonHandleRegistrar(linker),
+    json: (linker: WsLinker<{}>) => new JsonHandleRegistrar(linker),
 };
 
 const wsCon = getWs();

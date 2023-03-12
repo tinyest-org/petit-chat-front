@@ -125,5 +125,10 @@ class Bridger {
     }
 }
 
+export class SimpleToArrayConverter<T> implements Converter<T, T[]> {
+    async convert(t: T): Promise<T[]> {
+        return [t];
+    }
+}
 
 export const bridge = new Bridger();

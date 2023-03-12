@@ -1,8 +1,10 @@
-import { FetchOptions, HttpAPI, Method } from "../http/apiUtils";
-import { HTTPRequestError } from "../httpApi";
-import { AbstractLink, Converter } from "./link";
+import { FetchOptions, HttpAPI, Method } from "../../http/apiUtils";
+import { HTTPRequestError } from "../../httpApi";
+import { AbstractLink, Converter } from "../link";
+import { JsonDecoder } from "./decoder";
+import { JsonQueryEncoder, MultipartQueryEncoder } from "./encoder";
 
-type ParamExtractor<T> = (t: T) => HttpParams;
+export type ParamExtractor<T> = (t: T) => HttpParams;
 
 const format = (string: string, args: { [k: string]: any }) => {
     for (const key in args) {
@@ -11,16 +13,7 @@ const format = (string: string, args: { [k: string]: any }) => {
     return string;
 };
 
-
-function isString(x: unknown): x is string {
-    return typeof x === "string";
-}
-
-function isFile(x: unknown): x is File {
-    return x instanceof File;
-}
-
-type HttpParams = {
+export type HttpParams = {
     query?: { [key: string]: any },
     path?: { [key: string]: string | number },
     body?: any,
@@ -95,70 +88,6 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
     }
 }
 
-class JsonDecoder<R, Q = any> implements Converter<{ response: Response, query: any }, R> {
-    async convert({ response }: { response: Response, query: Q }): Promise<R> {
-        const text = await response.text();
-
-        if (response.status >= 400) {
-            throw new HTTPRequestError(response.status, text); // todo better handle error
-        }
-
-        // handle empty case
-        if (response.headers.get("content-length") === "0"
-            || response.status === 204
-            || text.length == 0
-        ) {
-            return null as unknown as R;
-        }
-        return JSON.parse(text);
-    }
-}
-
-class BlobDecoder implements Converter<{ response: Response, query: any }, Blob> {
-    async convert({ response }: { response: Response, query: any }): Promise<Blob> {
-        if (response.status >= 400) {
-            throw new HTTPRequestError(response.status, await response.text()); // todo better handle error
-        }
-        return response.blob();
-    }
-}
-
-class JsonQueryEncoder<T> implements Converter<T, HttpParams> {
-    protected readonly paramExtractor: ParamExtractor<T>;
-    constructor(paramExtractor: ParamExtractor<T>) {
-        this.paramExtractor = paramExtractor;
-    }
-
-    async convert(t: T): Promise<HttpParams> {
-        const { query, path, body } = this.paramExtractor(t);
-        const headers = {
-            "Content-Type": "application/json",
-            "Accept": "text/plain, application/json",
-        }
-        return { query, path, body: JSON.stringify(body), headers };
-    }
-}
-
-class MultipartQueryEncoder<T> implements Converter<T, HttpParams> {
-    protected readonly paramExtractor: ParamExtractor<T>;
-    constructor(paramExtractor: ParamExtractor<T>) {
-        this.paramExtractor = paramExtractor;
-    }
-
-    async convert(t: T): Promise<HttpParams> {
-        const { query, path, body } = this.paramExtractor(t);
-        const form = new FormData();
-        // TODO: finish handle files
-        Object.keys(body).forEach(k => {
-            const v = body[k];
-            if (isFile(v) || isString(v)) {
-                form.append(k, v);
-            }
-        });
-        return { query, path, body: form };
-    }
-}
-
 abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
     protected decoder = new JsonDecoder<R>(); // could be added in constructor too
     protected encoder = new JsonQueryEncoder<T>(this.paramExtractor);
@@ -205,7 +134,6 @@ abstract class JsonResponseMultiPartHttpLink<T extends {}, R> extends BaseHttpLi
 }
 
 // those are json links -> should make it clear
-// TODO: add support for protobuf link
 export class GetJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T, R> {
     protected method: Method = "GET";
 }
@@ -227,3 +155,4 @@ export class DeleteJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T,
     protected method: Method = "DELETE";
 }
 
+// TODO: add support for protobuf link

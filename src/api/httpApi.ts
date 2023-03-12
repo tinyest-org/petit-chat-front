@@ -1,4 +1,4 @@
-import keycloak, { getKeycloak } from "../keycloak";
+import keycloak from "../keycloak";
 import { HttpAPI, HTTPRequestError } from "./http/apiUtils";
 import SimpleCache, { LocalStoreObjectDataStore } from "./http/utils/cacheUtils";
 import { KeycloakSecurityProvider, NoopSecurityProvider } from "./http/securityUtils";
