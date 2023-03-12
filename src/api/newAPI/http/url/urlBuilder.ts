@@ -1,8 +1,4 @@
-// TODO: check if zod implements type inference
-
-interface UrlFragmentRenderer<T> {
-    render(t: T): string;
-}
+// TODO: check how zod implements type inference
 
 abstract class UrlFragment<Name extends string, T> {
     protected _name: Name;
@@ -29,30 +25,32 @@ class StringUrlFragment<Name extends string> extends UrlFragment<Name, string> {
     }
 }
 
-// type TypeWithGeneric<T> = T[]
-// type extractGeneric<Type> = Type extends TypeWithGeneric<infer X> ? X : never
+class NumberUrlFragment<Name extends string> extends UrlFragment<Name, number> {
+    getValue(x: number) {
+        return `${x}`;
+    }
+}
 
-// type extracted = extractGeneric<TypeWithGeneric<number>>
 
 type ExtractName<T> = T extends UrlFragment<infer X, infer U> ? X : never;
 type ExtractValue<T> = T extends UrlFragment<infer X, infer U> ? U : never;
 type ExtractBoth<T> = T extends UrlFragment<infer X, infer U> ? { name: X, type: U } : never;
 
-type FragmentsParams<Params extends UrlFragment<string, any>[]> = ExtractBoth<Params[number]>;
+type FragmentsParams<Params extends readonly UrlFragment<string, any>[]> = ExtractBoth<Params[number]>; // Todo: fix this
 
 const params = [new ConstUrlFragment("chatId"), new StringUrlFragment("signalId")];
 
 type Test = FragmentsParams<typeof params>;
 
-export class UrlTemplate<Params extends UrlFragment<string, any>[]> {
+export class UrlTemplate<Params extends readonly UrlFragment<string, any>[]> {
     // fragments: FragmentsParams<Params> 
     // "/chat/{chatId}/cursor/{signalId}"
     // [Fragment("chat"), Fragment("chatId", param=true), Fragment("cursor"), Fragment("signalId", param=true)]
-    constructor(fragments: Params) {
-        // this.fragments = fragments;
+    constructor(readonly fragments: Params) {
+        this.fragments = fragments;
     }
 
-    render(params: Params) {
+    render(params: FragmentsParams<Params>): string {
 
     }
 }
@@ -88,6 +86,9 @@ class Builder<Renderers> {
                 return this.path(newFragments);
             },
             get: () => fragments,
+            build: () => {
+                return new UrlTemplate(fragments);
+            }
         }
     }
 }
@@ -115,4 +116,8 @@ const template = b.root("/")
     .string("chatId")
     .const("cursor")
     .string("signalId")
-    .get();
+    .build();
+
+template.render({
+    chatId: "test",
+});
