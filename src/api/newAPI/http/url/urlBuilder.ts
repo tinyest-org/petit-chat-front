@@ -45,7 +45,7 @@ const params = [new ConstUrlFragment("chatId"), new StringUrlFragment("signalId"
 type Test = FragmentsParams<typeof params>;
 
 export class UrlTemplate<Params extends UrlFragment<string, any>[]> {
-    fragments: FragmentsParams<Params>
+    // fragments: FragmentsParams<Params> 
     // "/chat/{chatId}/cursor/{signalId}"
     // [Fragment("chat"), Fragment("chatId", param=true), Fragment("cursor"), Fragment("signalId", param=true)]
     constructor(fragments: Params) {
@@ -75,17 +75,17 @@ class Builder<Renderers> {
         // const build = <T extends UrlFragment<string, any>[]>() => {
         //     return new UrlTemplate<T>(fragments);
         // }
-        const self = this;
+        // il faut créer ça dynamiquement depuis une liste de renderer
         return {
             // il faut les wrappers pour qu'ils renvoient "this", cet objet pour les utiliser en mode "fluid"
             // rest of renderers
-            const: function <Name extends string>(name: Name) {
+            const: <Name extends string>(name: Name) => {
                 const newFragments = [...fragments, new ConstUrlFragment(name)] as const;
-                return self.path(newFragments);
+                return this.path(newFragments);
             },
-            string: function <Name extends string>(name: Name) {
+            string: <Name extends string>(name: Name) => {
                 const newFragments = [...fragments, new StringUrlFragment(name)] as const;
-                return self.path(newFragments);
+                return this.path(newFragments);
             },
             get: () => fragments,
         }
