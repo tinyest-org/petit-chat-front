@@ -160,7 +160,7 @@ export default function OneMessage(props: Props & { isFirst: boolean; chatId: ID
                         <ListItemSecondaryAction>
                             <MessageHelper />
                         </ListItemSecondaryAction>
-                        <EmojiPicker />
+                        {/* <EmojiPicker /> */}
                     </Show>
                     <Show when={hasThread}>
                         <Button variant="text" >

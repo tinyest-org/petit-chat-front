@@ -5,6 +5,7 @@ export function EmojiHandler() {
     const [res] = [null];
 
     return (
-        <EmojiPicker />
+        // <EmojiPicker />
+        <></>
     );
 }
