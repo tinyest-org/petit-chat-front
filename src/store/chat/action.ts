@@ -46,4 +46,9 @@ export const getUsersLink = httpLinker.register.json.get<{ chatId: ID }, User[]>
     paramExtractor: ({ chatId }) => ({ path: { chatId } })
 });
 
-export const updateCursor = new PutJsonHttpLink<{ chatId: ID, signalId: ID }, void>(httpApi, "/chat/{chatId}/cursor/{signalId}", ({ chatId, signalId }) => ({ path: { chatId, signalId } }))
+// export const updateCursor = new PutJsonHttpLink<{ chatId: ID, signalId: ID }, void>(httpApi, "/chat/{chatId}/cursor/{signalId}", ({ chatId, signalId }) => ({ path: { chatId, signalId } }))
+
+export const updateCursor = httpLinker.register.json.put<{ chatId: ID, signalId: ID }, {}>({
+    url: "/chat/{chatId}/cursor/{signalId}",
+    paramExtractor: ({ chatId, signalId }) => ({ path: { chatId, signalId } }),
+});

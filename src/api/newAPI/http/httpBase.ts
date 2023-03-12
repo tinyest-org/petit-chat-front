@@ -8,7 +8,7 @@ Matches a [`class` constructor](https://developer.mozilla.org/en-US/docs/Web/Jav
 */
 export type Constructor<T, Arguments extends unknown[] = any[]> = new (...arguments_: Arguments) => T;
 
-export abstract class HandleHttpRegistrar<S extends RegistrarProps<any> = RegistrarProps<any>> {
+export abstract class HandleHttpRegistrar<S extends RegistrarProps<any>> {
     protected abstract register<T extends {}, R extends {}>(props: S): BaseHttpLink<T, R>;
 }
 
@@ -21,12 +21,21 @@ export abstract class AbstractHttpHandleRegistrar<S extends RegistrarProps<any>>
         this.httpLinker = httpLinker;
     }
 
-    public readonly get = <T extends {}, R extends {}>(props: Omit<S, "method">): BaseHttpLink<T, R> => {
-        // TODO: fix me
-        // @ts-ignore
-        const handle = this.register<T, R>({ ...props, method: "GET" });
-        return handle;
+    protected readonly make = (method: Method) => {
+        return <T extends {}, R extends {}>(props: Omit<RegistrarProps<T>, "method">): BaseHttpLink<T, R> => {
+            // TODO: fix me
+            // @ts-ignore
+            const handle = this.register<T, R>({ ...props, method });
+            return handle;
+        }
     }
+
+    public readonly get = this.make("GET");
+    public readonly put = this.make("PUT");
+    public readonly post = this.make("POST");
+    public readonly delete = this.make("DELETE");
+    public readonly patch = this.make("PATCH");
+
 
     protected abstract register<T extends {}, R extends {}>(props: S): BaseHttpLink<T, R>;
 }
@@ -57,21 +66,14 @@ class JsonHandleRegistrar extends AbstractHttpHandleRegistrar<RegistrarProps<any
 const registrars = {
     json: (linker: HttpLinker<{}>) => new JsonHandleRegistrar(linker),
 };
-// export class WsLinker<
-//     H extends { [k: string]: HandleWsRegistrar },
-// > {
-//     protected readonly wsAPI: WebsocketConnection;
-//     protected handles: { [name: string]: WsLink<any, any> } = {};
 
-//     protected readonly registrars: H;
-
-export class HttpLinker<H extends { [k: string]: HandleHttpRegistrar },> {
+export class HttpLinker<H extends { [k: string]: HandleHttpRegistrar<any> },> {
     public readonly api: HttpAPI;
     protected readonly registrars: H;
 
     constructor(
         api: HttpAPI,
-        registrars: { [key in keyof H]: (linker: HttpLinker<any>) => HandleHttpRegistrar }
+        registrars: { [key in keyof H]: (linker: HttpLinker<any>) => HandleHttpRegistrar<any> }
     ) {
         this.api = api;
         this.registrars = this.buildRegistrars(registrars) as any;
