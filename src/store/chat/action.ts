@@ -1,5 +1,6 @@
 import { api } from "../../api/api";
 import { httpApi } from "../../api/httpApi";
+import { httpLinker } from "../../api/newAPI/http/httpBase";
 import { GetJsonHttpLink, PostMultipartHttpLink, PutJsonHttpLink } from "../../api/newAPI/http/httpLink";
 import { MultiLink, bridge, SimpleToArrayConverter } from "../../api/newAPI/link";
 import { wsLinker } from "../../api/newAPI/websocket/wsLink";
@@ -40,7 +41,9 @@ export const newMessageHandleMulti = MultiLink.of([
 ]);
 
 
-
-export const getUsersLink = new GetJsonHttpLink<{ chatId: ID }, User[]>(httpApi, "/chat/{chatId}/users", ({ chatId }) => ({ path: { chatId } }));
+export const getUsersLink = httpLinker.register.json.get<{ chatId: ID }, User[]>({
+    url: "/chat/{chatId}/users",
+    paramExtractor: ({ chatId }) => ({ path: { chatId } })
+});
 
 export const updateCursor = new PutJsonHttpLink<{ chatId: ID, signalId: ID }, void>(httpApi, "/chat/{chatId}/cursor/{signalId}", ({ chatId, signalId }) => ({ path: { chatId, signalId } }))

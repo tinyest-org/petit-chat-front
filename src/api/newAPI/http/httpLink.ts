@@ -88,7 +88,7 @@ export abstract class BaseHttpLink<T extends {}, R> extends AbstractLink<T, R> {
     }
 }
 
-abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
+export abstract class JsonResponseHttpLink<T extends {}, R> extends BaseHttpLink<T, R> {
     protected decoder = new JsonDecoder<R>(); // could be added in constructor too
     protected encoder = new JsonQueryEncoder<T>(this.paramExtractor);
 }
