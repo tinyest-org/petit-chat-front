@@ -1,7 +1,7 @@
 import { api } from "../../api/api";
 import { httpApi } from "../../api/httpApi";
 import { httpLinker } from "../../api/newAPI/http/httpBase";
-import { GetJsonHttpLink, PostMultipartHttpLink, PutJsonHttpLink } from "../../api/newAPI/http/httpLink";
+import { PostMultipartHttpLink } from "../../api/newAPI/http/httpLink";
 import { MultiLink, bridge, SimpleToArrayConverter } from "../../api/newAPI/link";
 import { wsLinker } from "../../api/newAPI/websocket/wsLink";
 import { ID } from "../common/type";

@@ -155,4 +155,12 @@ export class DeleteJsonHttpLink<T extends {}, R> extends JsonResponseHttpLink<T,
     protected method: Method = "DELETE";
 }
 
+export const jsonHttpLinks = {
+    get: GetJsonHttpLink,
+    put: PutJsonHttpLink,
+    delete: DeleteJsonHttpLink,
+    patch: PatchJsonHttpLink,
+    post: PostJsonHttpLink,
+}
+
 // TODO: add support for protobuf link
