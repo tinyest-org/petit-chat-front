@@ -119,5 +119,5 @@ const template = b.root("/")
     .build();
 
 template.render({
-    chatId: "test",
+    chatId: "test", // should not have error error
 });
