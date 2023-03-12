@@ -94,3 +94,19 @@ function createRecordMap<RecordMap extends Record<string, BaseRecord<string>>>(
 
 const otherMap = createRecordMap((builder) => builder.addRecord(r1).addRecord(r2));
 
+
+type VariableUrlFragment<Name extends string, U> = {
+    name: Name;
+    value: U;
+  }
+  
+  // Filtrer les entrées où U est de type void
+  type FilterVoid<T> = Pick<
+    T,
+    { [K in keyof T]: T[K] extends VariableUrlFragment<infer Name extends string, infer U> ? (U extends void ? K : never) : never } [keyof T]
+  >;
+  
+  // Exemple d'utilisation
+  type InputType = VariableUrlFragment<"foo", number> | VariableUrlFragment<"bar", string | undefined> | VariableUrlFragment<"baz", void>;
+  type OutputType = FilterVoid<InputType>;
+  

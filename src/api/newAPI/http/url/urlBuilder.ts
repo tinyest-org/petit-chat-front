@@ -19,13 +19,18 @@ class ConstUrlFragment<Name extends string> extends UrlFragment<Name, void> {
     }
 }
 
-class StringUrlFragment<Name extends string> extends UrlFragment<Name, string> {
+abstract class VariableUrlFragment<Name extends string, T> extends UrlFragment<Name, T> {
+
+}
+
+
+class StringUrlFragment<Name extends string> extends VariableUrlFragment<Name, string> {
     getValue(x: string) {
         return x;
     }
 }
 
-class NumberUrlFragment<Name extends string> extends UrlFragment<Name, number> {
+class NumberUrlFragment<Name extends string> extends VariableUrlFragment<Name, number> {
     getValue(x: number) {
         return `${x}`;
     }
@@ -34,13 +39,32 @@ class NumberUrlFragment<Name extends string> extends UrlFragment<Name, number> {
 
 type ExtractName<T> = T extends UrlFragment<infer X, infer U> ? X : never;
 type ExtractValue<T> = T extends UrlFragment<infer X, infer U> ? U : never;
-type ExtractBoth<T> = T extends UrlFragment<infer X, infer U> ? { name: X, type: U } : never;
+// type ExtractBoth<T> = T extends VariableUrlFragment<infer Name extends string, infer U> ? { [Name]: U } : never;
+type ExtractBoth<T> = T extends VariableUrlFragment<infer Name extends string, infer U> ? { [key in Name]: U } : never;
 
-type FragmentsParams<Params extends readonly UrlFragment<string, any>[]> = ExtractBoth<Params[number]>; // Todo: fix this
+type FilterVoid<T> = T extends VariableUrlFragment<infer Name extends string, infer U>
+    ? (U extends void ? never : VariableUrlFragment<Name, U>)
+    : never;
+
+type UnionToIntersection<T> =
+    (T extends any ? (x: T) => any : never) extends
+    (x: infer R) => any ? R : never
+
+// type FragmentsParams<Params extends readonly UrlFragment<string, any>[]> = {
+//     [k in ExtractBoth<Params[number]>["name"]]: ExtractBoth<Params[number]>
+// };
+
+type t<Params extends readonly UrlFragment<string, any>[]> = FilterVoid<Params[number]>;
+
+
+type FragmentsParams<Params extends readonly UrlFragment<string, any>[]> = UnionToIntersection<ExtractBoth<FilterVoid<Params[number]>>>;
+
+
+// type e<Params extends readonly UrlFragment<string, any>[]> = ExtractBoth<Params[number]>["name"];
 
 const params = [new ConstUrlFragment("chatId"), new StringUrlFragment("signalId")];
 
-type Test = FragmentsParams<typeof params>;
+type Test = t<typeof params>;
 
 export class UrlTemplate<Params extends readonly UrlFragment<string, any>[]> {
     // fragments: FragmentsParams<Params> 
@@ -51,7 +75,7 @@ export class UrlTemplate<Params extends readonly UrlFragment<string, any>[]> {
     }
 
     render(params: FragmentsParams<Params>): string {
-
+        return "";
     }
 }
 
@@ -119,5 +143,6 @@ const template = b.root("/")
     .build();
 
 template.render({
-    chatId: "test", // should not have error error
+    signalId: "",
+    chatId: "",
 });
