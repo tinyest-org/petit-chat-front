@@ -25,7 +25,7 @@ export const createThread = (chatId: ID, signalId: ID, text: string) => {
 type DetailedSignal = RawSignal & { chatId: string };
 
 // TODO: add support for schema link
-const wsNewMessageHandle = wsLinker.register.json.bind<{ chatId: string, body: any }, DetailedSignal>({ name: 'newMessage', receiveOnly: true });
+const wsNewMessageHandle = wsLinker.register.json.bind<{ chatId: string, body: any }, DetailedSignal>({ name: 'message', receiveOnly: true });
 
 // TODO: add HttpLinker like wsLinker
 const newMessagehttpLink = new PostMultipartHttpLink<{ chatId: string, body: any }, DetailedSignal[]>(httpApi, "/chat/{chatId}", ({ chatId, body }) => ({ path: { chatId }, body }));
