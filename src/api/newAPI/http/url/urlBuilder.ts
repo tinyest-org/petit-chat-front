@@ -65,32 +65,29 @@ class Builder<Renderers> {
 
     }
 
-
     root<R extends string>(base: R) {
-        let fragments = [new ConstUrlFragment(base)];
+        const b = [new ConstUrlFragment(base)] as const;
+        return this.path(b);
+    }
+
+    protected path<T extends readonly UrlFragment<string, any>[]>(fragments: T) {
         // utilise les fragments intermediaires qui ont été créés
         // const build = <T extends UrlFragment<string, any>[]>() => {
         //     return new UrlTemplate<T>(fragments);
         // }
-        const keys = {};
-
+        const self = this;
         return {
             // il faut les wrappers pour qu'ils renvoient "this", cet objet pour les utiliser en mode "fluid"
             // rest of renderers
-            const: function (name: string) {
-                // fragments.push(new ConstUrlFragment(name));
-                fragments = [...fragments, new ConstUrlFragment(name)]
-                // keys[name] = 
-                return this;
+            const: function <Name extends string>(name: Name) {
+                const newFragments = [...fragments, new ConstUrlFragment(name)] as const;
+                return self.path(newFragments);
             },
-            string: function (name: string) {
-                fragments.push(new StringUrlFragment(name));
-                return this;
+            string: function <Name extends string>(name: Name) {
+                const newFragments = [...fragments, new StringUrlFragment(name)] as const;
+                return self.path(newFragments);
             },
-            get: () => {
-                const f = [...fragments] as const;
-                return { fragments: f, keys };
-            }
+            get: () => fragments,
         }
     }
 }
