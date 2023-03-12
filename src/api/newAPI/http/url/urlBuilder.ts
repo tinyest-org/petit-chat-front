@@ -101,6 +101,10 @@ class Builder<Renderers> {
         return {
             // il faut les wrappers pour qu'ils renvoient "this", cet objet pour les utiliser en mode "fluid"
             // rest of renderers
+            number: <Name extends string>(name: Name) => {
+                const newFragments = [...fragments, new NumberUrlFragment(name)] as const;
+                return this.path(newFragments);
+            },
             const: <Name extends string>(name: Name) => {
                 const newFragments = [...fragments, new ConstUrlFragment(name)] as const;
                 return this.path(newFragments);
@@ -140,9 +144,11 @@ const template = b.root("/")
     .string("chatId")
     .const("cursor")
     .string("signalId")
+    .number("test")
     .build();
 
 template.render({
     signalId: "",
     chatId: "",
+    test: 1,
 });
