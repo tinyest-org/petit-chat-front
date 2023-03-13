@@ -1,5 +1,8 @@
 // TODO: check how zod implements type inference
 
+type FragmentProducer<T> = <Name extends string>(name: Name) => UrlFragment<Name, T>;
+
+
 abstract class UrlFragment<Name extends string, T> {
     protected _name: Name;
 
@@ -74,17 +77,21 @@ export class UrlTemplate<Params extends readonly UrlFragment<string, any>[]> {
         this.fragments = fragments;
     }
 
+    /**
+     * Not implemented for now
+     * @param params 
+     * @returns 
+     */
     render(params: FragmentsParams<Params>): string {
         return "";
     }
 }
 
-class Builder<Renderers> {
+class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
 
-    // renderers: UrlFragmentRenderer[] = [];
-
-    constructor() {
-
+    constructor(readonly renderers: Renderers) {
+        this.renderers = renderers;
+        // const res = this.makeProducers(renderers);
     }
 
     root<R extends string>(base: R) {
@@ -92,32 +99,46 @@ class Builder<Renderers> {
         return this.path(b);
     }
 
+    // private makeProducers(r: Renderers) {
+    //     const res: any = {};
+    //     Object.keys(r).forEach(key => {
+    //         res[key] = <Name extends string>(name: Name) => {
+    //             const newFragments = [...fragments, new NumberUrlFragment(name)] as const;
+    //             return this.path(newFragments);
+    //         },
+    //     }); 
+    // }
+
     protected path<T extends readonly UrlFragment<string, any>[]>(fragments: T) {
         // utilise les fragments intermediaires qui ont été créés
         // const build = <T extends UrlFragment<string, any>[]>() => {
         //     return new UrlTemplate<T>(fragments);
         // }
         // il faut créer ça dynamiquement depuis une liste de renderer
+        const self = this;
         return {
             // il faut les wrappers pour qu'ils renvoient "this", cet objet pour les utiliser en mode "fluid"
             // rest of renderers
-            number: <Name extends string>(name: Name) => {
-                const newFragments = [...fragments, new NumberUrlFragment(name)] as const;
-                return this.path(newFragments);
+            number: function <Name extends string>(name: Name) {
+                const frags = this.$$get();
+                const newFragments = [...frags, new NumberUrlFragment(name)] as const;
+                return self.path(newFragments);
             },
-            const: <Name extends string>(name: Name) => {
-                const newFragments = [...fragments, new ConstUrlFragment(name)] as const;
-                return this.path(newFragments);
+            const: function <Name extends string>(name: Name) {
+                const frags = this.$$get();
+                const newFragments = [...frags, new ConstUrlFragment(name)] as const;
+                return self.path(newFragments);
             },
-            string: <Name extends string>(name: Name) => {
-                const newFragments = [...fragments, new StringUrlFragment(name)] as const;
-                return this.path(newFragments);
+            string: function <Name extends string>(name: Name) {
+                const frags = this.$$get();
+                const newFragments = [...frags, new StringUrlFragment(name)] as const;
+                return self.path(newFragments);
             },
-            get: () => fragments,
+            $$get: () => fragments,
             build: () => {
                 return new UrlTemplate(fragments);
             }
-        }
+        } as const
     }
 }
 
@@ -139,7 +160,13 @@ class Builder<Renderers> {
  * 
  */
 
-const b = new Builder()
+const stringRenderer = <Name extends string>(name: Name) => new StringUrlFragment(name);
+
+
+
+const b = new Builder({
+    string: stringRenderer
+})
 const template = b.root("/")
     .string("chatId")
     .const("cursor")
@@ -147,7 +174,7 @@ const template = b.root("/")
     .number("test")
     .build();
 
-template.render({
+const result = template.render({
     signalId: "",
     chatId: "",
     test: 1,
