@@ -87,6 +87,13 @@ export class UrlTemplate<Params extends readonly UrlFragment<string, any>[]> {
     }
 }
 
+type ObjectKeys<T> =
+    T extends object ? (keyof T)[] :
+    T extends number ? [] :
+    T extends Array<any> | string ? string[] :
+    never;
+
+
 class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
 
     constructor(readonly renderers: Renderers) {
@@ -116,9 +123,19 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
         // }
         // il faut créer ça dynamiquement depuis une liste de renderer
         const self = this;
-        return {
-            // il faut les wrappers pour qu'ils renvoient "this", cet objet pour les utiliser en mode "fluid"
-            // rest of renderers
+        const base = {
+            $$get: () => fragments,
+        }
+        const items = {
+            number: NumberUrlFragment,
+            const: ConstUrlFragment,
+            string: StringUrlFragment,
+        } as const;
+        Object.keys(items).forEach(key => {
+            
+        });
+        const customPart = {
+            ...base,
             number: function <Name extends string>(name: Name) {
                 const frags = this.$$get();
                 const newFragments = [...frags, new NumberUrlFragment(name)] as const;
@@ -134,7 +151,11 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
                 const newFragments = [...frags, new StringUrlFragment(name)] as const;
                 return self.path(newFragments);
             },
-            $$get: () => fragments,
+        }
+        return {
+            // il faut les wrappers pour qu'ils renvoient "this", cet objet pour les utiliser en mode "fluid"
+            // rest of renderers
+            ...customPart,
             build: () => {
                 return new UrlTemplate(fragments);
             }

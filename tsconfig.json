@@ -12,6 +12,11 @@
       "vite/client"
     ],
     "noEmit": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "lib": [
+      "es5",
+      "DOM",
+      "esnext"
+    ]
   }
 }
