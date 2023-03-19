@@ -29,11 +29,11 @@ export abstract class AbstractLink<
         this.receiveOnly = receiveOnly;
     }
 
-    onMessage(name: string, f: (msg: R) => void) {
+    onMessage = (name: string, f: (msg: R) => void) => {
         this.handles[name] = f;
     }
 
-    removeHandle(name: string) {
+    removeHandle = (name: string) => {
         delete this.handles[name];
     }
 }
@@ -118,10 +118,10 @@ export class BridgeLink<T extends {}, R, FR> implements Link<T, FR> {
  */
 class Bridger {
     from<T extends {}, R>(inputLink: Link<T, R>) {
-        const b = <FR>(converter: Converter<R, FR>) => {
+        const using = <FR>(converter: Converter<R, FR>) => {
             return new BridgeLink(inputLink, converter);
         }
-        return { using: b };
+        return { using };
     }
 }
 

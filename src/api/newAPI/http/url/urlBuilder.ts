@@ -40,6 +40,13 @@ class NumberUrlFragment<Name extends string> extends VariableUrlFragment<Name, n
 }
 
 
+
+class DateUrlFragment<Name extends string> extends VariableUrlFragment<Name, Date> {
+    getValue(x: Date) {
+        return x.toISOString();
+    }
+}
+
 type ExtractName<T> = T extends UrlFragment<infer X, infer U> ? X : never;
 type ExtractValue<T> = T extends UrlFragment<infer X, infer U> ? U : never;
 // type ExtractBoth<T> = T extends VariableUrlFragment<infer Name extends string, infer U> ? { [Name]: U } : never;
@@ -103,16 +110,16 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
 
     root<R extends string>(base: R) {
         const b = [new ConstUrlFragment(base)] as const;
-        return this.path(b);
+        return this.path(this, b);
     }
 
-    protected path<T extends readonly UrlFragment<string, any>[]>(fragments: T) {
+    protected path<T extends readonly UrlFragment<string, any>[]>(self: typeof this, fragments: T) {
         // utilise les fragments intermediaires qui ont été créés
         // const build = <T extends UrlFragment<string, any>[]>() => {
         //     return new UrlTemplate<T>(fragments);
         // }
         // il faut créer ça dynamiquement depuis une liste de renderer
-        const self = this;
+        // const self = this;
         const base = {
             // default items
             $$get: () => fragments,
@@ -124,13 +131,13 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
             string: function <Name extends string>(name: Name) {
                 const frags = this.$$get();
                 const newFragments = [...frags, new StringUrlFragment(name)] as const;
-                return self.path(newFragments);
+                return self.path(self, newFragments);
             },
             // default renderer
             const: function <Name extends string>(name: Name) {
                 const frags = this.$$get();
                 const newFragments = [...frags, new ConstUrlFragment(name)] as const;
-                return self.path(newFragments);
+                return self.path(self, newFragments);
             },
         };
 
@@ -141,7 +148,26 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
             number: function <Name extends string>(name: Name) {
                 const frags = this.$$get();
                 const newFragments = [...frags, new NumberUrlFragment(name)] as const;
-                return self.path(newFragments);
+                return self.path(self, newFragments);
+            },
+        } as const
+    }
+}
+
+class ExtendedBuilder extends Builder<any> {
+    root<R extends string>(base: R) {
+        const b = [new ConstUrlFragment(base)] as const;
+        return this.path(this, b);
+    }
+    protected path<T extends readonly UrlFragment<string, any>[]>(self: typeof this, fragments: T) {
+        const a = super.path(this, fragments);
+        // const self = this;
+        return {
+            ...a,
+            date: function <Name extends string>(name: Name) {
+                const frags = this.$$get();
+                const newFragments = [...frags, new DateUrlFragment(name)] as const;
+                return self.path(self, newFragments);
             },
         } as const
     }
@@ -167,10 +193,11 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
 
 const stringRenderer = <Name extends string>(name: Name) => new StringUrlFragment(name);
 
-const b = new Builder({
+const b = new ExtendedBuilder({
     string: stringRenderer
-})
-const template = b.root("/api")
+});
+
+const template = b.root("/api").date("e")
     .const("/chat")
     .string("chatId")
     .const("cursor")
@@ -184,4 +211,5 @@ const result = template.render({
     signalId: "",
     chatId: "",
     test: 1,
+    e: new Date(),
 });
