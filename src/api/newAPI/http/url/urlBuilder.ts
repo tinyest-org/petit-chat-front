@@ -106,16 +106,6 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
         return this.path(b);
     }
 
-    // private makeProducers(r: Renderers) {
-    //     const res: any = {};
-    //     Object.keys(r).forEach(key => {
-    //         res[key] = <Name extends string>(name: Name) => {
-    //             const newFragments = [...fragments, new NumberUrlFragment(name)] as const;
-    //             return this.path(newFragments);
-    //         },
-    //     }); 
-    // }
-
     protected path<T extends readonly UrlFragment<string, any>[]>(fragments: T) {
         // utilise les fragments intermediaires qui ont été créés
         // const build = <T extends UrlFragment<string, any>[]>() => {
@@ -124,41 +114,35 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
         // il faut créer ça dynamiquement depuis une liste de renderer
         const self = this;
         const base = {
+            // default items
             $$get: () => fragments,
-        }
-        const items = {
-            number: NumberUrlFragment,
-            const: ConstUrlFragment,
-            string: StringUrlFragment,
-        } as const;
-        Object.keys(items).forEach(key => {
-            
-        });
-        const customPart = {
+            build: function () {
+                return new UrlTemplate(this.$$get());
+            },
+
+            // default renderer
+            string: function <Name extends string>(name: Name) {
+                const frags = this.$$get();
+                const newFragments = [...frags, new StringUrlFragment(name)] as const;
+                return self.path(newFragments);
+            },
+            // default renderer
+            const: function <Name extends string>(name: Name) {
+                const frags = this.$$get();
+                const newFragments = [...frags, new ConstUrlFragment(name)] as const;
+                return self.path(newFragments);
+            },
+        };
+
+        return {
+            // il faut les wrappers pour qu'ils renvoient "this", cet objet pour les utiliser en mode "fluid"
+            // rest of renderers
             ...base,
             number: function <Name extends string>(name: Name) {
                 const frags = this.$$get();
                 const newFragments = [...frags, new NumberUrlFragment(name)] as const;
                 return self.path(newFragments);
             },
-            const: function <Name extends string>(name: Name) {
-                const frags = this.$$get();
-                const newFragments = [...frags, new ConstUrlFragment(name)] as const;
-                return self.path(newFragments);
-            },
-            string: function <Name extends string>(name: Name) {
-                const frags = this.$$get();
-                const newFragments = [...frags, new StringUrlFragment(name)] as const;
-                return self.path(newFragments);
-            },
-        }
-        return {
-            // il faut les wrappers pour qu'ils renvoient "this", cet objet pour les utiliser en mode "fluid"
-            // rest of renderers
-            ...customPart,
-            build: () => {
-                return new UrlTemplate(fragments);
-            }
         } as const
     }
 }
@@ -183,17 +167,18 @@ class Builder<Renderers extends { [key: string]: FragmentProducer<any> }> {
 
 const stringRenderer = <Name extends string>(name: Name) => new StringUrlFragment(name);
 
-
-
 const b = new Builder({
     string: stringRenderer
 })
-const template = b.root("/")
+const template = b.root("/api")
+    .const("/chat")
     .string("chatId")
     .const("cursor")
     .string("signalId")
     .number("test")
     .build();
+
+console.log(template);
 
 const result = template.render({
     signalId: "",
